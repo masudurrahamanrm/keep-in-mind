@@ -72,10 +72,10 @@ export default function MediaUploadFAB({ onFilesSelect, isLoading }: MediaUpload
                   onClick={() => handleActionClick('video')}
                   className="flex items-center gap-3 group"
                 >
-                  <span className="bg-white dark:bg-surface-container-highest px-3 py-1 rounded-xl shadow-xl text-blue-600 dark:text-blue-400 font-bold text-xs tracking-wide group-hover:scale-105 transition-all">
+                  <span className="bg-white dark:bg-neutral-800 px-3 py-1 rounded-xl shadow-xl text-amber-600 dark:text-amber-400 font-bold text-xs tracking-wide group-hover:scale-105 transition-all">
                     Upload Video
                   </span>
-                  <div className="w-10 h-10 bg-white dark:bg-surface-container-highest rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-all text-blue-600 dark:text-blue-400 border border-on-surface/5">
+                  <div className="w-10 h-10 bg-white dark:bg-neutral-800 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-all text-amber-600 dark:text-amber-400 border border-neutral-100 dark:border-neutral-700">
                     <FilmIcon size={20} />
                   </div>
                 </motion.button>
@@ -89,10 +89,10 @@ export default function MediaUploadFAB({ onFilesSelect, isLoading }: MediaUpload
                   onClick={() => handleActionClick('image')}
                   className="flex items-center gap-3 group"
                 >
-                  <span className="bg-white dark:bg-surface-container-highest px-3 py-1 rounded-xl shadow-xl text-blue-600 dark:text-blue-400 font-bold text-xs tracking-wide group-hover:scale-105 transition-all">
+                  <span className="bg-white dark:bg-neutral-800 px-3 py-1 rounded-xl shadow-xl text-amber-600 dark:text-amber-400 font-bold text-xs tracking-wide group-hover:scale-105 transition-all">
                     Upload Photo
                   </span>
-                  <div className="w-10 h-10 bg-white dark:bg-surface-container-highest rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-all text-blue-600 dark:text-blue-400 border border-on-surface/5">
+                  <div className="w-10 h-10 bg-white dark:bg-neutral-800 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-all text-amber-600 dark:text-amber-400 border border-neutral-100 dark:border-neutral-700">
                     <ImageIcon size={20} />
                   </div>
                 </motion.button>
@@ -108,8 +108,8 @@ export default function MediaUploadFAB({ onFilesSelect, isLoading }: MediaUpload
             onClick={toggleMenu}
             disabled={isLoading}
             className={`
-              w-14 h-14 rounded-full flex items-center justify-center 
-              bg-blue-600 dark:bg-blue-500 text-white shadow-2xl transition-all duration-300 relative z-10
+              w-16 h-16 rounded-full flex items-center justify-center 
+              bg-gradient-to-tr from-amber-500 to-amber-400 text-white shadow-[0_8px_30px_rgb(245,158,11_/_40%)] hover:shadow-[0_12px_40px_rgb(245,158,11_/_50%)] transition-all duration-300 relative z-10
               ${isLoading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}
             `}
           >
@@ -146,7 +146,7 @@ export default function MediaUploadFAB({ onFilesSelect, isLoading }: MediaUpload
               initial={{ scale: 1, opacity: 0 }}
               animate={{ scale: 1.4, opacity: 0 }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
-              className="absolute inset-0 rounded-full border-2 border-blue-600/30"
+              className="absolute inset-0 rounded-full border-2 border-amber-500/40 shadow-[0_0_20px_rgb(245,158,11_/_30%)]"
             />
           )}
         </div>

@@ -268,6 +268,14 @@ export default function Notes() {
     openNoteForEdit(note);
   };
 
+  const { greeting, imageSrc } = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return { greeting: 'Good Morning', imageSrc: '/morning-3d.png' };
+    if (hour >= 12 && hour < 17) return { greeting: 'Good Afternoon', imageSrc: '/afternoon-3d.png' };
+    if (hour >= 17 && hour < 21) return { greeting: 'Good Evening', imageSrc: '/evening-3d.png' };
+    return { greeting: 'Good Night', imageSrc: '/night-3d.png' };
+  }, []);
+
   return (
     <div className="max-w-4xl mx-auto w-full flex flex-col min-h-full relative z-10 px-4 pb-28 pt-2">
       
@@ -275,7 +283,7 @@ export default function Notes() {
       <div className="w-full bg-[#FEF7D6] dark:from-[#2C2415] dark:to-[#42361C] rounded-[28px] p-6 mb-6 relative overflow-hidden shadow-sm shrink-0" style={{height:'144px'}}>
         <div className="relative z-10 w-2/3">
           <h2 className="text-[22px] font-bold text-gray-900 dark:text-amber-100 leading-tight mb-1">
-            Good Morning, 👋
+            {greeting}, 👋
           </h2>
           <p className="text-sm text-gray-600 dark:text-amber-200/80">
             What are your thoughts today?
@@ -283,9 +291,9 @@ export default function Notes() {
         </div>
         {/* Decorative glow */}
         <div className="absolute right-[-10px] bottom-[-20px] w-32 h-32 bg-yellow-300 rounded-full opacity-20 blur-2xl pointer-events-none" />
-        {/* 3D Lightbulb */}
+        {/* Dynamic 3D Graphic */}
         <div className="absolute right-0 bottom-0 w-32 h-full flex items-end justify-center pr-2 pb-2">
-          <img src="/lightbulb-3d.png" alt="Lightbulb" className="h-24 w-auto object-contain drop-shadow-md" />
+          <img src={imageSrc} alt={greeting} className="h-24 w-auto object-contain drop-shadow-md" />
         </div>
       </div>
 

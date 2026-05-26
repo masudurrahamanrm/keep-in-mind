@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Loader2, Image as ImagePlaceholder, History, Trash2, CloudOff, X as XIcon } from 'lucide-react';
+import { 
+  Search, Loader2, Image as ImagePlaceholder, History, Trash2, CloudOff, X as XIcon,
+  ShieldCheck, Bell, SlidersHorizontal, FileText, Cloud, Lock, IdCard, GraduationCap,
+  SquareActivity, Building2, Home, Folder, ArrowRight, ShieldAlert, LockKeyhole, Plus
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import MediaCard from '../components/MediaCard';
 import axios from 'axios';
@@ -443,7 +447,7 @@ export default function Gallery() {
   }, [selectedMediaIndex]);
 
   return (
-    <div className="max-w-7xl mx-auto w-full flex flex-col h-full relative z-10">
+    <div className="max-w-7xl mx-auto w-full flex flex-col relative z-10 bg-[#FFF9ED] dark:bg-neutral-900 p-4 sm:p-5 md:p-6 pb-32 sm:pb-32 md:pb-12 min-h-full">
 
       {/* No Google Drive Connection Banner */}
       <AnimatePresence>
@@ -468,143 +472,136 @@ export default function Gallery() {
         )}
       </AnimatePresence>
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 md:mb-10 gap-4">
-        <div className="space-y-1">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-heading font-extrabold text-on-surface tracking-tight flex flex-wrap items-center gap-2 md:gap-3">
-            Media <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-primary">Gallery</span>
-            {storage && (
-              <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full font-bold">
-                {storage.totalSize} Used
-              </span>
-            )}
-          </h1>
-          <p className="text-on-surface-variant font-medium text-sm md:text-base">Your cloud-stored memories, synced with Google Drive.</p>
-        </div>
-        
-        <div className="flex items-center gap-2 sm:gap-4 relative">
-          {/* Permanent Activity Center Trigger */}
-          <button
-            onClick={() => setIsActivityOpen(!isActivityOpen)}
-            className={`
-              relative p-3 rounded-2xl transition-all duration-300 flex items-center gap-2 group
-              ${isActivityOpen ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-surface-container hover:bg-surface-container-high text-on-surface-variant'}
-              ${uploadQueue.length > 0 && !isActivityOpen ? 'animate-pulse' : ''}
-            `}
-            title="Upload Activity"
-          >
-            <History size={20} className={isActivityOpen ? 'animate-spin' : 'group-hover:rotate-45 transition-transform'} />
-            
-            <AnimatePresence>
+      {/* ── Header ───────────────────────────────── */}
+      <div className="flex flex-col mb-8 mt-2">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/40 rounded-xl flex items-center justify-center text-amber-500 shadow-sm border border-amber-200/50">
+              <ShieldCheck size={24} />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-neutral-900 dark:text-white leading-tight">Secure Vault</h1>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">Your important documents. Safe. Private. Always with you.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setIsActivityOpen(!isActivityOpen)}
+              className="relative p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+            >
+              <Bell size={20} className="text-neutral-700 dark:text-neutral-300" />
               {uploadQueue.length > 0 && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0 }}
-                  className="absolute -top-1 -right-1 w-5 h-5 bg-error text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white"
-                >
-                  {uploadQueue.length}
-                </motion.div>
+                <span className="absolute top-2 right-2.5 w-2 h-2 bg-amber-500 rounded-full border border-white dark:border-neutral-800"></span>
               )}
-            </AnimatePresence>
-          </button>
+            </button>
+            <UploadActivityCenter 
+              isOpen={isActivityOpen} 
+              onClose={() => setIsActivityOpen(false)} 
+              queue={uploadQueue}
+              history={uploadHistory}
+            />
+          </div>
+        </div>
 
-          {/* Activity Dropdown */}
-          <UploadActivityCenter 
-            isOpen={isActivityOpen} 
-            onClose={() => setIsActivityOpen(false)} 
-            queue={uploadQueue}
-            history={uploadHistory}
-          />
-
-          <div className="bg-surface-container rounded-full px-3 sm:px-4 py-2 flex items-center gap-2 border border-outline-variant/30 focus-within:border-primary/50 transition-all flex-1 sm:flex-auto">
-            <Search size={16} className="text-on-surface-variant shrink-0" />
+        {/* Search Bar */}
+        <div className="flex items-center gap-3 mt-2">
+          <div className="flex-1 bg-white dark:bg-neutral-800 rounded-2xl px-4 py-3.5 flex items-center gap-3 shadow-sm border border-neutral-100 dark:border-neutral-700 focus-within:border-amber-400 transition-colors">
+            <Search size={18} className="text-neutral-400 shrink-0" />
             <input 
               type="text" 
-              placeholder="Search media..." 
+              placeholder="Search your documents..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent border-none outline-none text-sm w-full sm:w-32 md:w-48 text-on-surface placeholder:text-on-surface-variant/50"
+              className="bg-transparent border-none outline-none text-sm w-full text-neutral-800 dark:text-neutral-200 placeholder:text-neutral-400"
             />
+          </div>
+          <button className="w-12 h-12 bg-white dark:bg-neutral-800 rounded-2xl flex items-center justify-center shadow-sm border border-neutral-100 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 active:scale-95 transition-all">
+            <SlidersHorizontal size={20} />
+          </button>
+        </div>
+      </div>
+
+      {/* ── Dashboard Stats Cards ────────────────── */}
+      <div className="grid grid-cols-3 gap-3 mb-8">
+        <div className="bg-white dark:bg-neutral-800 rounded-2xl p-4 shadow-sm border border-neutral-100 dark:border-neutral-700 flex flex-col justify-between relative overflow-hidden">
+          <div className="flex items-center gap-2 mb-3 z-10">
+            <div className="w-6 h-6 rounded-md bg-amber-100 text-amber-500 flex items-center justify-center shrink-0">
+              <FileText size={14} />
+            </div>
+            <span className="text-[10px] sm:text-xs font-semibold text-neutral-600 dark:text-neutral-300 leading-tight">Total Documents</span>
+          </div>
+          <div className="flex items-baseline gap-1 z-10">
+            <span className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white">{activeCount}</span>
+            <span className="text-[10px] text-neutral-400">Files</span>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-neutral-800 rounded-2xl p-4 shadow-sm border border-neutral-100 dark:border-neutral-700 flex flex-col justify-between relative overflow-hidden">
+          <div className="flex items-center gap-2 mb-3 z-10">
+            <div className="w-6 h-6 rounded-md bg-emerald-100 text-emerald-500 flex items-center justify-center shrink-0">
+              <Cloud size={14} />
+            </div>
+            <span className="text-[10px] sm:text-xs font-semibold text-neutral-600 dark:text-neutral-300 leading-tight">Cloud Synced</span>
+          </div>
+          <div className="flex items-baseline gap-1 z-10">
+            <span className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white">{activeCount}</span>
+            <span className="text-[10px] text-neutral-400">Files</span>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-neutral-800 rounded-2xl p-4 shadow-sm border border-neutral-100 dark:border-neutral-700 flex flex-col justify-between relative overflow-hidden">
+          <div className="flex items-center gap-2 mb-3 z-10">
+            <div className="w-6 h-6 rounded-md bg-purple-100 text-purple-500 flex items-center justify-center shrink-0">
+              <Lock size={14} />
+            </div>
+            <span className="text-[10px] sm:text-xs font-semibold text-neutral-600 dark:text-neutral-300 leading-tight">Encrypted</span>
+          </div>
+          <div className="flex items-baseline gap-1 z-10">
+            <span className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white">100%</span>
+            <span className="text-[10px] text-neutral-400">Secure</span>
           </div>
         </div>
       </div>
 
-      {/* Stats & Filters */}
-      <div className="flex flex-wrap items-center justify-between mb-5 md:mb-8 gap-3">
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-          <button 
-            onClick={() => setFilterType('all')}
-            className={`px-3 sm:px-4 py-2 rounded-2xl text-xs font-bold transition-all whitespace-nowrap min-h-[36px] ${filterType === 'all' ? 'bg-primary text-white' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'}`}
-          >
-            All ({activeCount})
-          </button>
-          <button 
-            onClick={() => setFilterType('image')}
-            className={`px-3 sm:px-4 py-2 rounded-2xl text-xs font-bold transition-all whitespace-nowrap min-h-[36px] ${filterType === 'image' ? 'bg-secondary text-white' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'}`}
-          >
-            Images ({imageCount})
-          </button>
-          <button 
-            onClick={() => setFilterType('video')}
-            className={`px-3 sm:px-4 py-2 rounded-2xl text-xs font-bold transition-all whitespace-nowrap min-h-[36px] ${filterType === 'video' ? 'bg-tertiary text-on-tertiary-container' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'}`}
-          >
-            Videos ({videoCount})
-          </button>
-          <button 
-            onClick={() => {
-              setFilterType('trash');
-              setIsSelectionMode(false);
-              setSelectedIds(new Set());
-            }}
-            className={`px-3 sm:px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap min-h-[36px] ${filterType === 'trash' ? 'bg-error text-white' : 'bg-surface-container text-error/60 hover:bg-error/10'}`}
-          >
-            <History size={13} />
-            Trash ({trashCount})
-          </button>
-          
-          <AnimatePresence>
-            {isSelectionMode && (
-              <motion.button 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                onClick={() => {
-                  setIsSelectionMode(false);
-                  setSelectedIds(new Set());
-                }}
-                className="px-3 sm:px-4 py-2 rounded-2xl text-xs font-bold bg-primary text-white shadow-lg shadow-primary/30 transition-all whitespace-nowrap min-h-[36px]"
-              >
-                Cancel
-              </motion.button>
-            )}
-          </AnimatePresence>
-        </div>
+      {/* ── Categories Grid ──────────────────────── */}
+      <div className="grid grid-cols-2 gap-3 mb-8">
+        {[
+          { icon: IdCard, color: 'bg-amber-100 text-amber-500', name: 'Government IDs', count: 6 },
+          { icon: GraduationCap, color: 'bg-emerald-100 text-emerald-500', name: 'Education', count: 5 },
+          { icon: SquareActivity, color: 'bg-rose-100 text-rose-500', name: 'Medical', count: 4 },
+          { icon: Building2, color: 'bg-blue-100 text-blue-500', name: 'Banking', count: 3 },
+          { icon: Home, color: 'bg-purple-100 text-purple-500', name: 'Property', count: 2 },
+          { icon: Folder, color: 'bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300', name: 'Others', count: 4 },
+        ].map((cat, i) => (
+          <div key={i} className="bg-white dark:bg-neutral-800 rounded-2xl p-4 shadow-sm border border-neutral-100 dark:border-neutral-700 flex items-center justify-between cursor-pointer hover:shadow-md transition-shadow active:scale-95 group">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${cat.color}`}>
+                <cat.icon size={20} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-neutral-900 dark:text-white">{cat.name}</h3>
+                <p className="text-xs text-neutral-500">{cat.count} Documents</p>
+              </div>
+            </div>
+            <ArrowRight size={16} className="text-neutral-400 group-hover:translate-x-1 transition-transform hidden sm:block" />
+          </div>
+        ))}
+      </div>
 
-        <AnimatePresence>
-          {filterType === 'trash' && media.length > 0 && (
-            <motion.button
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              onClick={() => handlePermanentDelete(media.map(m => m._id), true)}
-              className="px-4 py-2 rounded-2xl text-xs font-bold bg-error/10 text-error hover:bg-error hover:text-white transition-all flex items-center gap-2"
-            >
-              <Trash2 size={14} />
-              Empty Trash
-            </motion.button>
-          )}
-        </AnimatePresence>
+      {/* ── Recently Added ───────────────────────── */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-bold text-neutral-900 dark:text-white">Recently Added</h2>
+        <button className="text-sm font-bold text-amber-500 hover:text-amber-600 transition-colors">View All</button>
       </div>
 
       {/* Grid */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 animate-pulse">
-          <Loader2 size={48} className="text-primary animate-spin mb-4" />
-          <p className="text-on-surface-variant font-medium">Syncing with Google Drive...</p>
+        <div className="flex flex-col items-center justify-center py-10 animate-pulse">
+          <Loader2 size={32} className="text-amber-500 animate-spin mb-4" />
+          <p className="text-neutral-500 text-sm font-medium">Syncing vault...</p>
         </div>
       ) : filteredMedia.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 mb-8">
           <AnimatePresence mode="popLayout">
             {filteredMedia.map((item, index) => (
               <MediaCard 
@@ -635,21 +632,40 @@ export default function Gallery() {
       ) : (
         <motion.div 
           initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="py-24 flex flex-col items-center justify-center text-center px-4 glass-panel rounded-[3rem] border-dashed border-2 border-outline-variant/30"
+          className="py-16 flex flex-col items-center justify-center text-center px-4 bg-white dark:bg-neutral-800 rounded-3xl shadow-sm border border-neutral-100 dark:border-neutral-700 mb-8"
         >
-          <div className="w-24 h-24 bg-surface-container rounded-full flex items-center justify-center mb-8">
-            <ImagePlaceholder size={40} className="text-on-surface-variant/30" />
+          <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-700 rounded-full flex items-center justify-center mb-4">
+            <ImagePlaceholder size={24} className="text-neutral-400" />
           </div>
-          <h2 className="text-2xl font-heading font-bold text-on-surface mb-2">
-            {searchQuery ? "No matches found" : "Your gallery is empty"}
+          <h2 className="text-lg font-bold text-neutral-900 dark:text-white mb-2">
+            {searchQuery ? "No matches found" : "Your vault is empty"}
           </h2>
-          <p className="max-w-xs text-on-surface-variant font-medium">
+          <p className="text-sm text-neutral-500">
             {searchQuery 
-              ? "Try searching for something else or clear the filter."
-              : "Start by uploading your first image or video. They'll be safe in your Google Drive."}
+              ? "Try searching for something else."
+              : "Upload your first document. It will be encrypted and safely stored."}
           </p>
         </motion.div>
       )}
+
+      {/* ── Security Banner ──────────────────────── */}
+      <div className="bg-gradient-to-r from-[#FFE8B6] to-[#FFD682] dark:from-amber-900/40 dark:to-amber-800/40 rounded-3xl p-5 relative overflow-hidden flex items-center justify-between border border-amber-200/50 dark:border-amber-700/50 shadow-sm mb-4">
+        {/* Background Graphic */}
+        <LockKeyhole size={100} className="absolute -bottom-8 right-8 text-amber-500/20 dark:text-amber-500/10 rotate-12 pointer-events-none" />
+        
+        <div className="flex items-start gap-3 sm:gap-4 relative z-10 max-w-[70%]">
+          <div className="w-10 h-10 rounded-full bg-white/80 dark:bg-black/30 flex items-center justify-center shrink-0 border border-amber-300/30">
+            <ShieldAlert size={20} className="text-amber-600 dark:text-amber-400" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-amber-900 dark:text-amber-200 mb-1">Your data is 100% secure</h3>
+            <p className="text-xs text-amber-700 dark:text-amber-400 mb-3">End-to-end encrypted & stored safely in cloud.</p>
+            <button className="text-[10px] uppercase font-bold tracking-wider text-amber-900 dark:text-amber-100 bg-white/80 dark:bg-white/10 px-3 py-1.5 rounded-full hover:bg-white transition-colors">
+              Learn more
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Animated Upload FAB */}
       <MediaUploadFAB 
