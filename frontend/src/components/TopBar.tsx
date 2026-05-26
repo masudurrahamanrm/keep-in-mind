@@ -182,8 +182,12 @@ export default function TopBar({ searchQuery, setSearchQuery, onToggleSidebar, o
 
       {/* Center: Title (mobile) or Search bar (tablet+) */}
       <div className="flex-1 flex items-center justify-center min-w-0">
-        {pageTitle && (currentPath === '/settings' || currentPath.startsWith('/drawing')) && (
+        {pageTitle && (currentPath === '/settings' || currentPath.startsWith('/drawing')) ? (
            <span className="md:hidden text-lg font-heading font-bold text-on-surface truncate px-2">{pageTitle}</span>
+        ) : (
+           <span className="md:hidden text-lg font-black tracking-tighter text-[#1A1F2C] dark:text-[#FFFDF5]">
+             KeepIn<span className="text-[#FFC107]">Mind</span>
+           </span>
         )}
 
         <div className={clsx(
@@ -206,7 +210,7 @@ export default function TopBar({ searchQuery, setSearchQuery, onToggleSidebar, o
       </div>
 
       {/* Right: Actions */}
-      <div className="flex items-center justify-end gap-1 sm:gap-2 shrink-0 w-24 sm:w-48 lg:w-64">
+      <div className="flex items-center justify-end gap-1 sm:gap-2 shrink-0 w-10 sm:w-48 lg:w-64">
         {/* Mobile search icon - Hide on deep pages */}
         {!canGoBack && (
           <button
@@ -218,7 +222,7 @@ export default function TopBar({ searchQuery, setSearchQuery, onToggleSidebar, o
         )}
 
         {/* Notifications */}
-        <div className="relative">
+        <div className="relative hidden sm:block">
           <button
             onClick={() => setIsNotificationOpen(!isNotificationOpen)}
             className={clsx(
@@ -256,7 +260,7 @@ export default function TopBar({ searchQuery, setSearchQuery, onToggleSidebar, o
         {/* Avatar */}
         <button
           onClick={() => navigate('/account')}
-          className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold overflow-hidden border-2 border-surface shadow-sm shrink-0 hover:ring-2 hover:ring-primary/40 transition-all"
+          className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold overflow-hidden border-2 border-surface shadow-sm shrink-0 hover:ring-2 hover:ring-primary/40 transition-all hidden sm:flex"
         >
           {user?.avatar ? (
             <img src={user.avatar} alt={user.name ?? 'Profile'} className="w-full h-full object-cover" referrerPolicy="no-referrer" />

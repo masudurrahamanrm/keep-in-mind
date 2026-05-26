@@ -258,7 +258,7 @@ export default function Auth() {
         </div>
 
         {/* Illustration */}
-        <div className="w-full max-w-[490px] h-[300px] flex justify-center items-center relative z-10 -mt-6 md:-mt-8">
+        <div className="w-full max-w-[490px] h-[300px] flex justify-center items-center relative z-10 mt-0">
            <img 
              src="/user-provided-notebook.jpg" 
              alt="Notebook" 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { useOutletContext, useNavigate } from 'react-router-dom';
-import { Plus, CheckSquare, Settings2, MoreHorizontal, Search, FileText, PenLine, Pin, Tag, Mic } from 'lucide-react';
+import { Plus, CheckSquare, Settings2, MoreHorizontal, Search, FileText, PenLine, Pin, Tag, Mic, Star, Menu, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../components/Sidebar';
 import { useAuth } from '../context/AuthContext';
@@ -10,26 +10,56 @@ import SpeedDial from '../components/SpeedDial';
 import NoteContextMenu from '../components/NoteContextMenu';
 
 const initialNotes = [
-  // ... (keeping the sample notes as fallback)
   {
     id: 1,
-    title: 'Grocery List',
-    content: '- Milk\n- Bread\n- Eggs\n- Avocados',
-    color: 'bg-primary/10 border-primary/20 hover:border-primary/50 text-on-surface',
-    textColor: 'text-primary',
-    date: new Date(Date.now() - 7200000).toISOString(),
+    title: 'Daily Goals',
+    content: JSON.stringify([
+      { id: 1, text: 'Drink water', checked: true },
+      { id: 2, text: '30 mins workout', checked: true },
+      { id: 3, text: 'Read 10 pages', checked: false }
+    ]),
+    color: 'bg-white',
+    textColor: 'text-[#FFC107]',
+    date: new Date(Date.now() - 3600000).toISOString(),
     type: 'list',
-    category: 'Personal'
+    category: 'Personal',
+    pinned: true
   },
   {
     id: 2,
     title: 'Project Ideas',
-    content: '1. AI powered note taking app\n2. Real-time collaboration\n3. Markdown support out of the box.',
-    color: 'bg-tertiary/10 border-tertiary/20 hover:border-tertiary/50 text-on-surface',
-    textColor: 'text-tertiary',
+    content: 'Design a new onboarding flow for KeepInMind app.',
+    color: 'bg-white',
+    textColor: 'text-[#FFC107]',
     date: new Date(Date.now() - 86400000).toISOString(),
     type: 'text',
-    category: 'Work'
+    category: 'Work',
+    pinned: false
+  },
+  {
+    id: 3,
+    title: 'Thoughts',
+    content: 'Discipline is the bridge between goals and accomplishment.',
+    color: 'bg-white',
+    textColor: 'text-[#FFC107]',
+    date: new Date(Date.now() - 172800000).toISOString(),
+    type: 'text',
+    category: 'Ideas',
+    pinned: false
+  },
+  {
+    id: 4,
+    title: 'Shopping List',
+    content: JSON.stringify([
+      { id: 1, text: 'Milk, Eggs, Bread', checked: false },
+      { id: 2, text: 'Butter, Fruits, Honey', checked: false }
+    ]),
+    color: 'bg-white',
+    textColor: 'text-[#FFC107]',
+    date: new Date(Date.now() - 604800000).toISOString(),
+    type: 'list',
+    category: 'Personal',
+    pinned: false
   }
 ];
 
@@ -38,7 +68,6 @@ export default function Notes() {
   const navigate = useNavigate();
   const [contextMenu, setContextMenu] = useState<{ note: any; x: number; y: number } | null>(null);
   
-  // Storage key is unique to the user if signed in
   const storageKey = user ? `keep-in-mind-notes-${user._id}` : 'keep-in-mind-notes-guest';
 
   const [notes, setNotes] = useState(() => {
@@ -63,16 +92,15 @@ export default function Notes() {
       } catch (err) {
         console.error('Auto-sync failed:', err);
       }
-    }, 3000); // 3-second debounce
+    }, 3000);
 
     return () => clearTimeout(syncTimeout);
   }, [notes, user, token, googleAccessToken]);
 
-  const [viewMode] = useState<'grid' | 'list'>('grid');
   const [filterActive, setFilterActive] = useState('All');
   const { searchQuery } = useOutletContext<{ searchQuery: string }>();
 
-  // Persist notes whenever they change
+  // Persist notes
   useEffect(() => {
     localStorage.setItem(storageKey, JSON.stringify(notes));
   }, [notes, storageKey]);
@@ -82,11 +110,10 @@ export default function Notes() {
     return saved ? JSON.parse(saved) : ['Personal', 'Work', 'Ideas', 'Urgent'];
   })()];
 
-  const filteredNotes = useMemo(() => {
+  // Separate pinned and unpinned notes
+  const { pinnedNotes, allNotes } = useMemo(() => {
     const result = notes.filter(note => {
-      // Exclude archived notes from main view
       if (note.archived) return false;
-
       const matchesSearch = !searchQuery || 
         note.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
         note.content.toLowerCase().includes(searchQuery.toLowerCase());
@@ -94,11 +121,12 @@ export default function Notes() {
       return matchesSearch && matchesFilter;
     });
 
-    return result.sort((a, b) => {
-      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
-      return b.id - a.id;
-    });
+    return {
+      pinnedNotes: result.filter(n => n.pinned),
+      allNotes: result.filter(n => !n.pinned).sort((a, b) => b.id - a.id)
+    };
   }, [notes, searchQuery, filterActive]);
+
   const handleSaveNote = (savedNote: any) => {
     if (savedNote.isNew || !savedNote.id) {
       setNotes([{
@@ -157,25 +185,20 @@ export default function Notes() {
     const shareText = `${categoryText}${note.title}\n\n${note.content || ''}`;
     
     try {
-      // 1. Always copy text to clipboard as baseline
       if (!note.type || note.type === 'text' || note.type === 'list') {
         await navigator.clipboard.writeText(shareText);
       }
 
-      // 2. Prepare sharing data
       const shareData: any = { title: note.title, text: shareText, url: window.location.href };
 
-      // 3. Handle Drawing/Image Sharing
       if (note.type === 'drawing' && note.content?.startsWith('data:')) {
         const file = await base64ToFile(note.content, `${note.title || 'drawing'}.png`);
         if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
           shareData.files = [file];
-          // For drawings, the text content is secondary (it's often just empty or meta)
           shareData.text = note.title ? `${categoryText}${note.title}` : 'Shared drawing';
         }
       }
 
-      // 4. Trigger Native Share
       if (navigator.share) {
         await navigator.share(shareData);
       }
@@ -184,223 +207,252 @@ export default function Notes() {
     }
   };
 
-  const handleHide = (note: any) => {
-    setNotes(prev => prev.filter(n => n.id !== note.id)); // Temporary hide for this session
-    setContextMenu(null);
-  };
-
   const openNoteForEdit = (note: any) => {
     setContextMenu(null);
     if (note.type === 'drawing') navigate(`/drawing/${note.id}`);
     else navigate(`/editor/${note.id}`);
   };
 
+  // Icon mapping helper based on note title and category
+  const getNote3DIcon = (note: any) => {
+    const title = note.title.toLowerCase();
+    if (title.includes('shop') || title.includes('grocery') || title.includes('list')) {
+      return '/shopping-3d.png';
+    }
+    if (title.includes('thought') || title.includes('idea')) {
+      return '/thoughts-3d.png';
+    }
+    return '/lightbulb-3d.png';
+  };
+
+  const getNoteIconBg = (note: any) => {
+    const title = note.title.toLowerCase();
+    if (title.includes('shop') || title.includes('grocery') || title.includes('list')) {
+      return 'bg-[#FFF0EB] dark:bg-orange-950/20'; // light orange
+    }
+    if (title.includes('thought') || title.includes('idea')) {
+      return 'bg-[#FFF9EA] dark:bg-yellow-950/20'; // light yellow
+    }
+    return 'bg-[#FFF9EA] dark:bg-yellow-950/20';
+  };
+
   return (
-    <div className="max-w-7xl mx-auto w-full flex flex-col h-full relative z-10">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 md:mb-8 gap-4">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-heading font-extrabold text-on-surface tracking-tight">
-          My <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Notes</span>
-        </h1>
-        
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 backdrop-blur-md bg-on-surface/5 p-1.5 rounded-full border border-on-surface/5 shadow-sm transition-colors shrink-0">
-          {filters.map(filter => (
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              key={filter}
-              onClick={() => setFilterActive(filter)}
-              className={cn(
-                "px-3 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-300 min-h-[36px]",
-                filterActive === filter
-                  ? "bg-primary text-white shadow-lg shadow-primary/30"
-                  : "text-on-surface hover:bg-surface-container-high/50"
-              )}
-            >
-              {filter}
-            </motion.button>
-          ))}
-          <div className="w-px h-6 bg-outline-variant/30 mx-2 hidden sm:block"></div>
-          <button 
-            className="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-high/50 rounded-full transition-colors ml-1"
-            title="Filter options"
-          >
-            <Settings2 size={20} />
+    <div className="max-w-4xl mx-auto w-full flex flex-col h-full relative z-10 px-4 pb-28 pt-2">
+      
+      {/* 1. GREETING BANNER CARD */}
+      <div className="w-full bg-gradient-to-br from-[#FFF3D6] to-[#FFEAB3] dark:from-[#2C2415] dark:to-[#42361C] rounded-[24px] p-5 md:p-6 mb-6 flex justify-between items-center relative overflow-hidden shadow-sm">
+        <div className="flex flex-col gap-1 relative z-10">
+          <h2 className="text-xl md:text-2xl font-black text-gray-900 dark:text-amber-100 tracking-tight flex items-center gap-1.5">
+            Good Morning, 👋
+          </h2>
+          <p className="text-xs font-bold text-gray-700/80 dark:text-amber-200/80">
+            What are your thoughts today?
+          </p>
+        </div>
+        <div className="w-[76px] h-[76px] relative shrink-0 z-10 flex items-center justify-center">
+           <img src="/lightbulb-3d.png" alt="Lightbulb" className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
+        </div>
+        <div className="absolute -bottom-8 -right-8 w-24 h-24 bg-white/20 rounded-full blur-xl pointer-events-none" />
+      </div>
+
+      {/* 2. PINNED NOTES SECTION */}
+      {pinnedNotes.length > 0 && (
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-base font-black text-gray-900 dark:text-gray-100 flex items-center gap-1.5 tracking-tight">
+              📌 Pinned Notes
+            </h3>
+            <button className="text-xs font-bold text-[#FFC107] hover:text-[#F5B000] transition-colors">
+              View all
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4">
+            {pinnedNotes.map((note) => {
+              const isList = note.type === 'list';
+              let listItems: any[] = [];
+              if (isList && note.content) {
+                try {
+                  listItems = JSON.parse(note.content);
+                } catch {
+                  listItems = note.content.split('\n').filter(Boolean).map((t, i) => ({ id: i, text: t.replace(/^-\s*/, ''), checked: false }));
+                }
+              }
+
+              return (
+                <div
+                  key={note.id}
+                  onClick={() => openNoteForEdit(note)}
+                  className="bg-[#FFF9EA] dark:bg-yellow-950/20 rounded-[24px] p-5 shadow-sm border border-black/5 dark:border-white/5 hover:shadow-md transition-all duration-300 relative flex justify-between items-start cursor-pointer group"
+                >
+                  <div className="flex-1 min-w-0 pr-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-base font-black text-gray-900 dark:text-gray-100 truncate flex items-center gap-1.5">
+                        {note.title}
+                      </h4>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePin(note);
+                        }}
+                        className="p-1 text-[#FFC107] rounded-full transition-colors"
+                      >
+                        <Pin size={18} className="fill-[#FFC107]" />
+                      </button>
+                    </div>
+
+                    {isList ? (
+                      <div className="space-y-2">
+                        {listItems.slice(0, 3).map((item: any) => (
+                          <div key={item.id} className="flex items-center gap-2.5 text-xs text-gray-700 dark:text-gray-300 font-semibold">
+                            <div className={cn(
+                              "w-[15px] h-[15px] rounded border shrink-0 flex items-center justify-center transition-all",
+                              item.checked ? "border-[#FFC107] bg-[#FFC107]/15" : "border-gray-300 dark:border-white/20"
+                            )}>
+                              {item.checked && (
+                                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#FFC107" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                              )}
+                            </div>
+                            <span className={cn("truncate", item.checked && "line-through opacity-50")}>
+                              {item.text}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold line-clamp-3">
+                        {note.content}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* clipboard 3D image on right side */}
+                  <div className="w-[84px] h-[84px] shrink-0 flex items-center justify-center">
+                    <img src="/clipboard-3d.png" alt="Clipboard" className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 3. ALL NOTES SECTION */}
+      <div>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-base font-black text-gray-900 dark:text-gray-100 flex items-center gap-1.5 tracking-tight">
+            ⚔️ All Notes
+          </h3>
+          <button className="flex items-center gap-1 text-xs font-bold text-gray-500 hover:text-gray-700 transition-colors">
+            Recent <ChevronDown size={14} strokeWidth={3} />
           </button>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <AnimatePresence>
+            {allNotes.map((note) => {
+              const isList = note.type === 'list';
+              let previewText = note.content || '';
+              if (isList && note.content) {
+                try {
+                  const parsed = JSON.parse(note.content);
+                  previewText = parsed.map((p: any) => p.text).join(', ');
+                } catch {
+                  previewText = note.content.replace(/^-\s*/gm, '').replace(/\n/g, ', ');
+                }
+              }
+
+              return (
+                <motion.div
+                  layoutId={`note-${note.id}`}
+                  key={note.id}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  onClick={() => openNoteForEdit(note)}
+                  className="bg-white dark:bg-[#1A1C20] rounded-[22px] p-4 shadow-sm border border-black/5 dark:border-white/5 hover:shadow-md transition-all duration-300 flex items-center gap-4 cursor-pointer relative group"
+                >
+                  {/* Left 3D icon wrapper */}
+                  <div className={cn("w-[50px] h-[50px] rounded-[18px] flex items-center justify-center shrink-0 overflow-hidden", getNoteIconBg(note))}>
+                    <img src={getNote3DIcon(note)} alt="Icon" className="w-[36px] h-[36px] object-contain mix-blend-multiply dark:mix-blend-normal" />
+                  </div>
+
+                  {/* Middle Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-center mb-1">
+                      <h4 className="text-sm font-black text-gray-900 dark:text-gray-100 truncate pr-4">
+                        {note.title}
+                      </h4>
+                      <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-tight whitespace-nowrap">
+                        {(() => {
+                          try {
+                            const date = parseISO(note.date);
+                            if (isNaN(date.getTime())) return note.date;
+                            return formatDistanceToNow(date, { addSuffix: false }).replace('about', '') + ' ago';
+                          } catch {
+                            return note.date;
+                          }
+                        })()}
+                      </span>
+                    </div>
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 truncate pr-6">
+                      {previewText}
+                    </p>
+                  </div>
+
+                  {/* Right Star Outline / context menu */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePin(note);
+                      }}
+                      className="p-1.5 text-gray-300 hover:text-[#FFC107] rounded-full transition-colors"
+                      title={note.pinned ? "Unpin Note" : "Pin Note"}
+                    >
+                      <Star size={16} className={cn(note.pinned ? "fill-[#FFC107] text-[#FFC107]" : "text-gray-300 dark:text-gray-600")} />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                        setContextMenu({ note, x: rect.left, y: rect.bottom + 4 });
+                      }}
+                      className="p-1.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-full transition-colors"
+                    >
+                      <MoreHorizontal size={16} />
+                    </button>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+
+          {allNotes.length === 0 && PinnedNotesCount(pinnedNotes) === 0 && (
+            <div className="py-12 flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-gray-100 dark:bg-white/5 rounded-full flex items-center justify-center mb-4">
+                <FileText size={30} className="text-gray-400" />
+              </div>
+              <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">It's empty here</h4>
+              <p className="text-xs text-gray-500 max-w-[240px] leading-relaxed">
+                Create your first note by clicking the button below.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className={cn(
-        "grid gap-4 md:gap-6",
-        viewMode === 'grid'
-          ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-max"
-          : "grid-cols-1 max-w-3xl"
-      )}>
-        <AnimatePresence>
-          {filteredNotes.map((note) => {
-            const isDrawing = note.type === 'drawing';
-            const isList = note.type === 'list';
-            let listItems: any[] = [];
-            if (isList && note.content) {
-              try {
-                const parsed = JSON.parse(note.content);
-                if (Array.isArray(parsed)) listItems = parsed;
-              } catch {
-                // Old plain-text format: "- Milk\n- Bread\n..."
-                listItems = note.content.split('\n')
-                  .filter((l: string) => l.trim())
-                  .map((line: string, i: number) => ({
-                    id: i,
-                    text: line.replace(/^-\s*/, '').trim(),
-                    checked: false,
-                  }));
-              }
-            }
-
-            return (
-              <motion.div
-                layoutId={`note-${note.id}`}
-                key={note.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                whileHover={{ scale: 1.02, y: -4 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                onClick={() => {
-                  if (isDrawing) navigate(`/drawing/${note.id}`);
-                  else navigate(`/editor/${note.id}`);
-                }}
-                className={cn(
-                  "group cursor-pointer rounded-[2rem] p-6 border backdrop-blur-xl transition-all relative break-inside-avoid shadow-sm overflow-hidden",
-                  note.color
-                )}
-              >
-                <div className="flex justify-between items-start mb-4 relative z-10">
-                  <h3 className="font-heading font-bold text-xl leading-snug line-clamp-2 pr-8 text-on-surface group-hover:text-primary transition-colors flex items-center gap-2">
-                    {note.pinned && <Pin size={16} className="text-primary fill-primary" />}
-                    {note.title}
-                  </h3>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                      setContextMenu({ note, x: rect.left, y: rect.bottom + 4 });
-                    }}
-                    className="p-1.5 bg-on-surface/5 hover:bg-on-surface/10 rounded-full transition-all absolute top-0 right-0 text-on-surface-variant hover:text-primary shadow-sm"
-                  >
-                    <MoreHorizontal size={16} />
-                  </button>
-                </div>
-
-                {/* Drawing Thumbnail */}
-                {isDrawing && note.content && note.content.startsWith('data:') ? (
-                  <img
-                    src={note.content}
-                    alt="Drawing"
-                    className="w-full rounded-xl object-contain max-h-40 bg-white/50"
-                  />
-                ) : isList ? (
-                  /* List Preview */
-                  <div className="space-y-1.5 relative z-10">
-                    {listItems.slice(0, 4).map((item: any) => (
-                      <div key={item.id} className="flex items-center gap-2 text-sm text-on-surface-variant">
-                        <div className={cn(
-                          "w-4 h-4 rounded border-2 shrink-0 flex items-center justify-center",
-                          item.checked ? "border-primary bg-primary/20" : "border-on-surface/30"
-                        )}>
-                          {item.checked && <CheckSquare size={10} className="text-primary" />}
-                        </div>
-                        <span className={cn("truncate", item.checked && "line-through opacity-50")}>{item.text || '—'}</span>
-                      </div>
-                    ))}
-                    {listItems.length > 4 && (
-                      <p className="text-xs text-on-surface-variant/50 pl-6">+{listItems.length - 4} more</p>
-                    )}
-                  </div>
-                ) : (
-                  <div className="relative z-10">
-                    {note.content?.includes('<audio') && (
-                      <div className="flex items-center gap-2 mb-2 p-3 bg-primary/5 rounded-xl border border-primary/10 text-primary">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
-                          <Mic size={14} />
-                        </div>
-                        <span className="text-xs font-black uppercase tracking-wider">Voice Note</span>
-                      </div>
-                    )}
-                    <p className="text-sm text-on-surface-variant/90 line-clamp-5 whitespace-pre-wrap leading-relaxed font-medium">
-                      {note.content?.replace(/<[^>]*>/g, '')}
-                    </p>
-                  </div>
-                )}
-
-                <div className="mt-6 flex items-center justify-between opacity-60 text-on-surface-variant relative z-10">
-                  <span className="text-xs font-bold tracking-wider uppercase">
-                    {(() => {
-                      try {
-                        const date = parseISO(note.date);
-                        if (isNaN(date.getTime())) return note.date; // Fallback for old string dates
-                        return formatDistanceToNow(date, { addSuffix: true });
-                      } catch {
-                        return note.date;
-                      }
-                    })()}
-                  </span>
-                  <div className="flex items-center gap-3">
-                    {note.category && (
-                      <div className="flex items-center gap-1 text-[10px] bg-on-surface/5 px-2 py-0.5 rounded-full border border-on-surface/5 font-bold uppercase tracking-tight">
-                        <Tag size={10} /> {note.category}
-                      </div>
-                    )}
-                    <div className={cn("flex items-center gap-2", note.textColor)}>
-                      {isList && <CheckSquare size={16} strokeWidth={2.5} />}
-                      {isDrawing && <PenLine size={16} strokeWidth={2.5} />}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-
-        {filteredNotes.length === 0 && (
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            className="col-span-full py-12 flex flex-col items-center text-center px-4"
-          >
-            <div className="w-16 h-16 glass-panel rounded-full flex items-center justify-center mb-4 shadow-lg shadow-primary/5">
-              {searchQuery ? <Search size={32} className="text-primary/50" /> : <FileText size={32} className="text-primary/50" />}
-            </div>
-            <h2 className="text-2xl font-heading font-bold text-on-surface mb-2">
-              {searchQuery ? "No results found" : "It's empty here"}
-            </h2>
-            <p className="max-w-xs mx-auto text-sm text-on-surface-variant mb-6 leading-relaxed">
-              {searchQuery 
-                ? `We couldn't find any notes matching "${searchQuery}".`
-                : "Capture your ideas, lists, and thoughts by creating your first note."}
-            </p>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/editor')}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl font-bold shadow-xl shadow-primary/20 transition-all"
-            >
-              <Plus size={20} strokeWidth={3} />
-              <span className="text-base">Create Note</span>
-            </motion.button>
-          </motion.div>
-        )}
-
-      </div>
-
-      {/* Speed Dial FAB */}
-      <SpeedDial onAdd={(type) => {
-        if (type === 'audio' || type === 'image') {
-          return;
-        }
-        if (type === 'drawing') {
-          navigate('/drawing');
-        } else {
-          navigate('/editor');
-        }
-      }} />
+      {/* Floating Action Button (FAB) matching the mockup */}
+      <button
+        onClick={() => navigate('/editor')}
+        className="fixed bottom-24 right-5 w-[60px] h-[60px] rounded-full bg-[#FFC107] hover:bg-[#F5B000] text-white flex items-center justify-center shadow-lg shadow-[#FFC107]/25 active:scale-95 transition-all z-40"
+        title="Add Note"
+      >
+        <Plus size={30} strokeWidth={2.5} />
+      </button>
 
       {/* Note Context Menu */}
       <AnimatePresence>
@@ -422,4 +474,9 @@ export default function Notes() {
       </AnimatePresence>
     </div>
   );
+}
+
+// Helper to count pinned notes safely
+function PinnedNotesCount(arr: any[]) {
+  return arr.length;
 }
