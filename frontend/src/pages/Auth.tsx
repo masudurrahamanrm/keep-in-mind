@@ -204,7 +204,7 @@ export default function Auth() {
 
       {/* TOP SECTION */}
       <div className="w-full flex flex-col items-center pt-3 md:pt-4 relative z-10 px-4 shrink-0 -mt-1">
-        <div className="flex flex-col items-center relative z-20">
+        <div className="flex flex-col items-center relative z-20 mt-1.5">
           <img 
             src="/app-icon-generated.png" 
             alt="KeepInMind Logo" 
@@ -219,8 +219,16 @@ export default function Auth() {
         </div>
 
         {/* Illustration */}
-        <div className="w-full max-w-[490px] h-[300px] flex justify-center items-center relative z-10 -mt-2 md:-mt-3">
-           <img src="/user-provided-notebook.jpg" alt="Notebook" className="h-full w-full object-contain drop-shadow-[0_15px_25px_rgba(0,0,0,0.12)] mix-blend-multiply" />
+        <div className="w-full max-w-[490px] h-[300px] flex justify-center items-center relative z-10 -mt-6 md:-mt-8">
+           <img 
+             src="/user-provided-notebook.jpg" 
+             alt="Notebook" 
+             className="h-full w-full object-contain drop-shadow-[0_15px_25px_rgba(0,0,0,0.12)] mix-blend-multiply" 
+             style={{
+               WebkitMaskImage: 'radial-gradient(ellipse, black 50%, transparent 70%)',
+               maskImage: 'radial-gradient(ellipse, black 50%, transparent 70%)'
+             }}
+           />
         </div>
       </div>
 
