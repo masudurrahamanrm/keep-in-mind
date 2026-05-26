@@ -37,110 +37,110 @@
   --color-on-tertiary-container: var(--on-tertiary-container);
 }
 
-/* ── Light Mode (default) ───────────────────────────────────── */
+/* ── Light Mode (default: Cream & Vibrant Warm Yellow) ──────── */
 :root,
 [data-theme="light"] {
-  --primary: #5142E6; /* More vibrant Indigo */
-  --primary-container: #E0E0FF;
-  --on-primary: #FFFFFF;
-  --on-primary-container: #00006E;
+  --primary: #FFC107; /* Vibrant warm yellow */
+  --primary-container: #FFF3D6; /* Soft cream yellow container */
+  --on-primary: #1A1F2C; /* Matte black for rich contrast */
+  --on-primary-container: #5C4300; /* Deep gold/brown text */
   
-  --surface: #F8F9FF;
-  --surface-container-lowest: #FFFFFF;
-  --surface-container-low: #F1F3FB;
-  --surface-container: #E8EBF5;
-  --surface-container-high: #DDE1F0;
-  --surface-container-highest: #D2D6E6;
+  --surface: #FFFDF9; /* Luxury warm cream white */
+  --surface-container-lowest: #FFFFFF; /* Clean pure white for high contrast cards */
+  --surface-container-low: #FFF9EA; /* Soft beige/cream */
+  --surface-container: #FFF4D9; /* Warm beige */
+  --surface-container-high: #FFEAB3; /* Soft gold highlight */
+  --surface-container-highest: #FFE08C; /* Warm rich gold highlight */
   
-  --on-surface: #10121D;
-  --on-surface-variant: #404452;
-  --outline: #72778E;
-  --outline-variant: #C2C6DC;
+  --on-surface: #1A1F2C; /* Matte black text */
+  --on-surface-variant: #5D6470; /* Soft charcoal gray text */
+  --outline: #D6BE85; /* Soft gold outline */
+  --outline-variant: #FFE8B3; /* Very soft warm outline highlight */
 
   --error: #FF3B30;
   --on-error: #FFFFFF;
   --error-container: #FFDAD6;
   --on-error-container: #410002;
 
-  --secondary: #007AFF; /* Vibrant Blue */
-  --secondary-container: #D1E9FF;
-  --on-secondary: #FFFFFF;
-  --on-secondary-container: #001D33;
+  --secondary: #FFD54F; /* Light warm gold/yellow */
+  --secondary-container: #FFF7DB;
+  --on-secondary: #1A1F2C;
+  --on-secondary-container: #523B00;
 
-  --tertiary: #AF52DE; /* Vibrant Purple */
-  --tertiary-container: #F5E6FF;
-  --on-tertiary: #FFFFFF;
-  --on-tertiary-container: #2B0052;
+  --tertiary: #FFB300; /* Warm Amber */
+  --tertiary-container: #FFE5A3;
+  --on-tertiary: #1A1F2C;
+  --on-tertiary-container: #4F3500;
 }
 
 
 [data-theme="dark"] {
-  --primary: #B9C3FF;
-  --primary-container: #2A4283;
-  --on-primary: #112A6A;
-  --on-primary-container: #DEE1FF;
+  --primary: #FFC107; /* Glowing vibrant yellow */
+  --primary-container: #3B2C00; /* Dark warm gold container */
+  --on-primary: #1A1F2C;
+  --on-primary-container: #FFE9B3;
   
-  --surface: #111318;
-  --surface-container-lowest: #0C0E13;
-  --surface-container-low: #191C20;
-  --surface-container: #1D2024;
-  --surface-container-high: #282A2F;
-  --surface-container-highest: #33353A;
+  --surface: #121316; /* Luxury deep charcoal background */
+  --surface-container-lowest: #0B0C0E;
+  --surface-container-low: #1A1B20;
+  --surface-container: #212328;
+  --surface-container-high: #2B2D33;
+  --surface-container-highest: #373A41;
   
-  --on-surface: #E2E2E9;
-  --on-surface-variant: #C4C6D0;
-  --outline: #8E9099;
-  --outline-variant: #44474E;
+  --on-surface: #F5F6F8; /* Soft clean white */
+  --on-surface-variant: #A4ABB7; /* Warm gray text */
+  --outline: #776E59; /* Soft muted gold/charcoal outline */
+  --outline-variant: #3C3930;
 
   --error: #FFB4AB;
   --on-error: #690005;
   --error-container: #93000A;
   --on-error-container: #FFDAD6;
 
-  --secondary: #C0C6DD;
-  --secondary-container: #3F4759;
-  --on-secondary: #2A3142;
-  --on-secondary-container: #DCE2F9;
+  --secondary: #FFE082;
+  --secondary-container: #4E3E00;
+  --on-secondary: #1A1F2C;
+  --on-secondary-container: #FFE082;
 
-  --tertiary: #E3BADA;
-  --tertiary-container: #5A3D58;
-  --on-tertiary: #43273F;
-  --on-tertiary-container: #FFD7F7;
+  --tertiary: #FFCA28;
+  --tertiary-container: #5D4037;
+  --on-tertiary: #FFFFFF;
+  --on-tertiary-container: #FFE0B2;
 }
 
-/* ── AMOLED Mode — Pure Black ─────────────────────────────── */
+/* ── AMOLED Mode ────────────────────────────────────────────── */
 [data-theme="amoled"] {
-  --primary: #CBD2FF;
-  --primary-container: #112A6A;
+  --primary: #FFC107;
+  --primary-container: #231A00;
   --on-primary: #000000;
-  --on-primary-container: #DEE1FF;
+  --on-primary-container: #FFE5A3;
   
   --surface: #000000;
   --surface-container-lowest: #000000;
-  --surface-container-low: #0A0A0A;
-  --surface-container: #121212;
-  --surface-container-high: #1E1E1E;
-  --surface-container-highest: #282828;
+  --surface-container-low: #09090A;
+  --surface-container: #111215;
+  --surface-container-high: #1C1D21;
+  --surface-container-highest: #28292E;
   
   --on-surface: #FFFFFF;
-  --on-surface-variant: #BCC3D6;
-  --outline: #5C5E66;
-  --outline-variant: #2F3036;
+  --on-surface-variant: #BFC4D1;
+  --outline: #5E5848;
+  --outline-variant: #2E2C24;
 
   --error: #FFB4AB;
   --on-error: #690005;
   --error-container: #93000A;
   --on-error-container: #FFDAD6;
 
-  --secondary: #C0C6DD;
-  --secondary-container: #3F4759;
+  --secondary: #FFE082;
+  --secondary-container: #332700;
   --on-secondary: #000000;
-  --on-secondary-container: #DCE2F9;
+  --on-secondary-container: #FFE082;
 
-  --tertiary: #E3BADA;
-  --tertiary-container: #5A3D58;
+  --tertiary: #FFCA28;
+  --tertiary-container: #3E2723;
   --on-tertiary: #000000;
-  --on-tertiary-container: #FFD7F7;
+  --on-tertiary-container: #FFE0B2;
 }
 
 body {
@@ -163,9 +163,9 @@ body {
 }
 
 [data-theme="light"] .glass {
-  background: #FFFFFF;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 32px rgba(255, 193, 7, 0.04);
 }
 
 
@@ -193,11 +193,11 @@ body {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   background:
-    radial-gradient(circle at 5% 10%, rgba(139, 92, 246, 0.25) 0%, transparent 45%),
-    radial-gradient(circle at 95% 90%, rgba(59, 130, 246, 0.25) 0%, transparent 45%),
-    radial-gradient(circle at 80% 10%, rgba(236, 72, 153, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 20% 85%, rgba(16, 185, 129, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.1) 0%, transparent 55%);
+    radial-gradient(circle at 5% 10%, rgba(255, 193, 7, 0.15) 0%, transparent 45%),
+    radial-gradient(circle at 95% 90%, rgba(255, 213, 79, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 80% 10%, rgba(255, 179, 0, 0.1) 0%, transparent 40%),
+    radial-gradient(circle at 20% 85%, rgba(255, 244, 204, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(255, 224, 130, 0.08) 0%, transparent 55%);
   pointer-events: none;
   z-index: 0;
   filter: blur(80px);
@@ -205,11 +205,11 @@ body {
 
 [data-theme="light"] .bg-mesh::after {
   background:
-    radial-gradient(circle at 5% 10%, rgba(139, 92, 246, 0.12) 0%, transparent 45%),
-    radial-gradient(circle at 95% 90%, rgba(59, 130, 246, 0.12) 0%, transparent 45%),
-    radial-gradient(circle at 80% 10%, rgba(236, 72, 153, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 20% 85%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.05) 0%, transparent 55%);
+    radial-gradient(circle at 5% 10%, rgba(255, 193, 7, 0.08) 0%, transparent 45%),
+    radial-gradient(circle at 95% 90%, rgba(255, 213, 79, 0.08) 0%, transparent 45%),
+    radial-gradient(circle at 80% 10%, rgba(255, 179, 0, 0.06) 0%, transparent 40%),
+    radial-gradient(circle at 20% 85%, rgba(255, 244, 204, 0.1) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(255, 224, 130, 0.05) 0%, transparent 55%);
 }
 
 

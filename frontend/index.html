@@ -23,7 +23,7 @@
             .catch(err => {
               console.error('SW registration failed:', err);
               if (window.location.protocol === 'https:') {
-                console.warn('⚠️ Service Worker blocked by SSL certificate. Visit https://192.168.1.114:3001 and click "Advanced" to trust the certificate, or enable chrome://flags/#unsafely-treat-insecure-origin-as-secure');
+                console.warn(`⚠️ Service Worker blocked by SSL certificate. Visit ${window.location.origin} and click "Advanced" to trust the certificate, or enable chrome://flags/#unsafely-treat-insecure-origin-as-secure`);
               }
             });
         });
