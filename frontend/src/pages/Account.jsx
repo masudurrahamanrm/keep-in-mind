@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
-import { Shield, Key, LogOut, Trash2, Activity, Settings, ChevronRight, CheckSquare, Clock } from 'lucide-react';
+import { LogOut, Trash2, ChevronRight, Edit2, Crown, BarChart2, Star, Archive, HelpCircle, Info, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ProfileCard from '../components/profile/ProfileCard';
 import EditProfileModal from '../components/profile/EditProfileModal';
@@ -118,101 +118,129 @@ export default function Account() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 sm:space-y-8 min-h-full relative z-10 pb-24">
-      
-      <div className="shrink-0">
-        <h1 className="text-2xl sm:text-4xl md:text-5xl font-heading font-extrabold text-on-surface tracking-tight">
-          Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Profile</span>
-        </h1>
-      </div>
+    <div className="w-full min-h-screen bg-[#FFF9EA] pb-28 relative font-sans overflow-x-hidden">
+      {/* Background Gradient & Shapes */}
+      <div className="absolute top-0 left-0 right-0 h-[400px] bg-gradient-to-b from-[#FFD54F]/60 to-[#FFF9EA] z-0 pointer-events-none" />
+      <div className="absolute top-16 left-8 w-8 h-8 bg-yellow-400 rounded-full blur-[2px] opacity-40 mix-blend-overlay z-0" />
+      <div className="absolute top-24 right-12 w-12 h-12 bg-yellow-300 rounded-full blur-[3px] opacity-50 mix-blend-overlay z-0" />
+      <div className="absolute top-48 left-[-20px] w-16 h-16 bg-yellow-500 rounded-full blur-[4px] opacity-20 z-0" />
+      <div className="absolute top-64 right-6 w-10 h-10 bg-yellow-200 rounded-full blur-[2px] opacity-30 z-0" />
 
-      <ProfileCard profile={profile} onEditClick={() => setIsEditModalOpen(true)} />
-
-      <DriveStorageCard />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 mt-6 md:mt-8">
+      <div className="max-w-xl mx-auto px-5 pt-8 relative z-10 flex flex-col items-center">
         
-        {/* Left Column */}
-        <div className="space-y-8">
-          <SectionCard title="Security" description="Protect your account from unauthorized access." icon={Shield}>
-             <div className="mb-4 pb-4 border-b border-white/5">
-                <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Auth Provider</span>
-                <span className="text-sm text-on-surface flex items-center gap-2 font-medium">
-                  <div className={`w-2 h-2 rounded-full ${user?.authProvider === 'google' ? 'bg-tertiary' : 'bg-primary'}`}></div>
-                  {user?.authProvider === 'google' ? 'Google Account' : 'Email & Password'}
-                </span>
-             </div>
-             <SettingRow label="Two-Factor Authentication" description="Add an extra layer of security">
-               <Toggle checked={security.twoFactor} onChange={handle2FAToggle} />
-             </SettingRow>
-             <SettingRow label="Login Alerts" description="Get notified of new logins">
-               <Toggle checked={security.loginAlerts} onChange={(v) => setSecurity({...security, loginAlerts: v})} />
-             </SettingRow>
-          </SectionCard>
-
-          <SectionCard title="Account Actions" description="Sensitive administrative actions." icon={Key}>
-            <SettingRow label="Change Password" description={user?.authProvider === 'google' ? "Not applicable for Google sign-in" : "Ensure your account security"}>
-               <Button variant="secondary" onClick={() => {}} disabled={user?.authProvider === 'google'}>
-                 {user?.authProvider === 'google' ? 'Google Account' : 'Change Password'}
-               </Button>
-            </SettingRow>
-            <div className="pt-4 mt-2">
-               <div className="flex gap-4">
-                 <Button variant="secondary" icon={LogOut} onClick={handleLogout}>Sign Out</Button>
-                 <Button variant="danger" icon={Trash2} onClick={() => {}}>Delete Account</Button>
-               </div>
-            </div>
-          </SectionCard>
+        {/* Header Actions */}
+        <div className="w-full flex justify-between items-center mb-2">
+          <button 
+            onClick={() => navigate('/notes')}
+            className="p-2 bg-black/5 hover:bg-black/10 rounded-full transition-colors backdrop-blur-sm"
+          >
+            <ArrowLeft size={20} className="text-gray-700" />
+          </button>
+          <button 
+            onClick={() => setIsEditModalOpen(true)}
+            className="p-2 bg-black/5 hover:bg-black/10 rounded-full transition-colors backdrop-blur-sm"
+          >
+            <Edit2 size={20} className="text-gray-700" />
+          </button>
         </div>
 
-        {/* Right Column */}
-        <div className="space-y-8">
-          <SectionCard title="Activity" description="Your recent interactions within Keep In Mind." icon={Activity}>
-             <div className="grid grid-cols-2 gap-4 mb-6">
-               <div className="bg-surface-container rounded-2xl p-4 border border-outline-variant/20 shadow-sm text-center">
-                  <span className="block text-3xl font-heading font-bold text-primary mb-1">{stats.total}</span>
-                  <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Total Notes</span>
-               </div>
-               <div className="bg-surface-container rounded-2xl p-4 border border-outline-variant/20 shadow-sm text-center">
-                  <span className="block text-3xl font-heading font-bold text-secondary mb-1">{stats.activeToday}</span>
-                  <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Created Today</span>
-               </div>
-             </div>
-
-             <div>
-               <h4 className="text-sm font-bold text-on-surface-variant uppercase tracking-wider mb-3">Recently Edited</h4>
-               <div className="space-y-3">
-                 {recentActivity.map(act => (
-                   <div key={act.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-container-high transition-colors cursor-pointer border border-transparent hover:border-outline-variant/30 group">
-                      <div className="w-10 h-10 rounded-xl bg-surface flex items-center justify-center shrink-0 shadow-sm group-hover:shadow group-hover:scale-105 transition-all">
-                        <CheckSquare size={16} className={act.color} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h5 className="text-sm font-bold text-on-surface truncate">{act.title}</h5>
-                        <span className="text-xs text-on-surface-variant flex items-center gap-1 mt-0.5"><Clock size={10} /> {act.time}</span>
-                      </div>
-                   </div>
-                 ))}
-               </div>
-             </div>
-          </SectionCard>
-
-          <div 
-            onClick={() => navigate('/settings')}
-            className="glass-panel p-6 rounded-3xl flex items-center justify-between cursor-pointer group hover:bg-surface-container hover:shadow-lg transition-all border border-transparent hover:border-primary/20"
-          >
-             <div className="flex items-center gap-4">
-               <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
-                 <Settings size={24} />
-               </div>
-               <div>
-                  <h3 className="font-heading font-bold text-lg text-on-surface group-hover:text-primary transition-colors">Preferences</h3>
-                  <p className="text-sm text-on-surface-variant">Manage theme, sorting, and defaults</p>
-               </div>
-             </div>
-             <ChevronRight size={24} className="text-on-surface-variant group-hover:text-primary group-hover:translate-x-1 transition-all" />
+        {/* Profile Avatar */}
+        <div className="relative mb-4">
+          <div className="w-[120px] h-[120px] rounded-full p-1 bg-white shadow-lg shadow-yellow-500/20">
+            {profile.avatar ? (
+              <img src={profile.avatar} alt="Profile" className="w-full h-full rounded-full object-cover" />
+            ) : (
+              <div className="w-full h-full rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center text-4xl text-white font-bold">
+                {profile.name.charAt(0)}
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Name & Email */}
+        <h1 className="text-3xl font-black text-gray-900 tracking-tight mb-1 text-center">
+          {profile.name}
+        </h1>
+        <p className="text-sm font-medium text-gray-600 text-center mb-8">
+          {profile.email}
+        </p>
+
+        {/* Premium Banner */}
+        <div className="w-full bg-white rounded-[24px] p-5 shadow-sm border border-gray-100 flex items-center justify-between mb-8 cursor-pointer hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-[#FFF9EA] flex items-center justify-center shrink-0">
+              <Crown className="text-[#FFC107] fill-[#FFC107]" size={24} />
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900 text-[15px] flex items-center gap-1">
+                KeepInMind Premium <ChevronRight size={16} className="text-gray-400" />
+              </h3>
+              <p className="text-sm font-medium text-gray-500">Unlock all premium features</p>
+            </div>
+          </div>
+          <button className="bg-[#FFC107] hover:bg-[#F5B000] text-white font-bold text-sm px-5 py-2.5 rounded-full shadow-sm transition-colors shrink-0">
+            Go Premium
+          </button>
+        </div>
+
+        {/* Nav List 1 */}
+        <div className="w-full bg-[#FFFdf8] rounded-[24px] overflow-hidden shadow-sm border border-gray-100 mb-6">
+          <div className="flex items-center justify-between p-4 px-5 border-b border-gray-100/60 cursor-pointer hover:bg-gray-50/50 transition-colors">
+            <div className="flex items-center gap-4">
+              <BarChart2 size={22} className="text-[#FFC107]" strokeWidth={2.5} />
+              <span className="font-bold text-gray-800">My Stats</span>
+            </div>
+            <ChevronRight size={20} className="text-gray-400" />
+          </div>
+          <div className="flex items-center justify-between p-4 px-5 border-b border-gray-100/60 cursor-pointer hover:bg-gray-50/50 transition-colors">
+            <div className="flex items-center gap-4">
+              <Star size={22} className="text-[#FFC107]" strokeWidth={2.5} />
+              <span className="font-bold text-gray-800">Favorites</span>
+            </div>
+            <ChevronRight size={20} className="text-gray-400" />
+          </div>
+          <div className="flex items-center justify-between p-4 px-5 border-b border-gray-100/60 cursor-pointer hover:bg-gray-50/50 transition-colors">
+            <div className="flex items-center gap-4">
+              <Trash2 size={22} className="text-[#FFC107]" strokeWidth={2.5} />
+              <span className="font-bold text-gray-800">Trash</span>
+            </div>
+            <ChevronRight size={20} className="text-gray-400" />
+          </div>
+          <div className="flex items-center justify-between p-4 px-5 cursor-pointer hover:bg-gray-50/50 transition-colors">
+            <div className="flex items-center gap-4">
+              <Archive size={22} className="text-[#FFC107]" strokeWidth={2.5} />
+              <span className="font-bold text-gray-800">Archived</span>
+            </div>
+            <ChevronRight size={20} className="text-gray-400" />
+          </div>
+        </div>
+
+        {/* Nav List 2 */}
+        <div className="w-full bg-[#FFFdf8] rounded-[24px] overflow-hidden shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between p-4 px-5 border-b border-gray-100/60 cursor-pointer hover:bg-gray-50/50 transition-colors">
+            <div className="flex items-center gap-4">
+              <HelpCircle size={22} className="text-[#FFC107]" strokeWidth={2.5} />
+              <span className="font-bold text-gray-800">Help & Support</span>
+            </div>
+            <ChevronRight size={20} className="text-gray-400" />
+          </div>
+          <div className="flex items-center justify-between p-4 px-5 cursor-pointer hover:bg-gray-50/50 transition-colors">
+            <div className="flex items-center gap-4">
+              <Info size={22} className="text-[#FFC107]" strokeWidth={2.5} />
+              <span className="font-bold text-gray-800">About KeepInMind</span>
+            </div>
+            <ChevronRight size={20} className="text-gray-400" />
+          </div>
+          
+          <div className="flex items-center justify-between p-4 px-5 cursor-pointer hover:bg-gray-50/50 transition-colors border-t border-gray-100/60" onClick={handleLogout}>
+            <div className="flex items-center gap-4">
+              <LogOut size={22} className="text-red-400" strokeWidth={2.5} />
+              <span className="font-bold text-red-500">Log Out</span>
+            </div>
+            <ChevronRight size={20} className="text-gray-400" />
+          </div>
+        </div>
+
       </div>
 
       <AnimatePresence>
@@ -224,22 +252,9 @@ export default function Account() {
               const newOverrides = { name: p.name, phone: p.phone, bio: p.bio, avatar: p.avatar };
               setLocalOverrides(newOverrides);
               localStorage.setItem(profileKey, JSON.stringify(newOverrides));
-              
-              // Update global AuthContext state so Sidebar and Header also update
-              updateUser({
-                name: p.name,
-                avatar: p.avatar
-              });
-
+              updateUser({ name: p.name, avatar: p.avatar });
               setIsEditModalOpen(false); 
             }} 
-          />
-        )}
-        {twoFactorModal && (
-          <TwoFactorModal
-            mode={twoFactorModal}
-            onClose={() => setTwoFactorModal(null)}
-            onSuccess={on2FASuccess}
           />
         )}
       </AnimatePresence>

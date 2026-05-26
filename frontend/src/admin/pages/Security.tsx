@@ -59,18 +59,6 @@ export default function Security() {
               </li>
               <li className="p-4 flex items-center justify-between hover:bg-surface-container-low transition-colors">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-error-container text-on-error-container flex items-center justify-center">
-                    <AlertTriangle className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-body-sm font-medium text-primary">Failed Attempt</p>
-                    <p className="text-label-caps text-on-surface-variant">Moscow, RU • Unknown Device</p>
-                  </div>
-                </div>
-                <span className="text-label-caps text-error bg-error-container px-2 py-1 rounded">Failed</span>
-              </li>
-              <li className="p-4 flex items-center justify-between hover:bg-surface-container-low transition-colors">
-                <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-primary">
                     <Smartphone className="w-5 h-5" />
                   </div>

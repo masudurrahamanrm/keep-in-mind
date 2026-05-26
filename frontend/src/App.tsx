@@ -106,7 +106,6 @@ export default function App() {
           <Route path="labels"   element={<Suspense fallback={<PageLoader />}><Labels /></Suspense>}  />
           <Route path="archive"  element={<Suspense fallback={<PageLoader />}><Archive /></Suspense>} />
           <Route path="account"  element={<Suspense fallback={<PageLoader />}><Account /></Suspense>} />
-          <Route path="explore"  element={<Suspense fallback={<PageLoader />}><Explore /></Suspense>} />
           <Route path="explore/:id" element={<Suspense fallback={<PageLoader />}><ExplorePost /></Suspense>} />
           <Route path="recent"   element={<Suspense fallback={<PageLoader />}><Recent /></Suspense>}  />
           <Route path="settings" element={<Suspense fallback={<PageLoader />}><Settings /></Suspense>}/>
