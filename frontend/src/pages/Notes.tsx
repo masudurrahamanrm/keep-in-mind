@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { formatDistanceToNow, parseISO } from 'date-fns';
+import { formatDistanceToNow, parseISO, format } from 'date-fns';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import { Plus, CheckSquare, Settings2, MoreHorizontal, Search, FileText, PenLine, Pin, Tag, Mic, Star, Menu, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -445,41 +445,38 @@ export default function Notes() {
                   </div>
 
                   {/* Middle Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-center mb-1">
-                      <h4 className="text-sm font-black text-gray-900 dark:text-gray-100 truncate pr-4">
-                        {note.title}
-                      </h4>
-                      <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-tight whitespace-nowrap">
-                        {(() => {
-                          try {
-                            const date = parseISO(note.date);
-                            if (isNaN(date.getTime())) return note.date;
-                            return formatDistanceToNow(date, { addSuffix: false }).replace('about', '') + ' ago';
-                          } catch {
-                            return note.date;
-                          }
-                        })()}
-                      </span>
-                    </div>
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    <h4 className="text-sm font-black text-gray-900 dark:text-gray-100 truncate pr-4 mb-1">
+                      {note.title}
+                    </h4>
                     <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 truncate pr-6">
                       {previewText}
                     </p>
                   </div>
 
-                  {/* Right Star Outline / context menu */}
-                  <div className="flex items-center gap-2 shrink-0">
+                  {/* Right Side */}
+                  <div className="flex flex-col items-end gap-1.5 shrink-0 justify-center">
+                    <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-tight whitespace-nowrap">
+                      {(() => {
+                        try {
+                          const date = parseISO(note.date);
+                          if (isNaN(date.getTime())) return note.date;
+                          return format(date, 'MMM d, h:mm a');
+                        } catch {
+                          return note.date;
+                        }
+                      })()}
+                    </span>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handlePin(note);
                       }}
-                      className="p-1.5 text-gray-300 hover:text-[#FFC107] rounded-full transition-colors"
+                      className="p-1 text-gray-300 hover:text-[#FFC107] rounded-full transition-colors mt-[-4px]"
                       title={note.pinned ? "Unpin Note" : "Pin Note"}
                     >
                       <Star size={16} className={cn(note.pinned ? "fill-[#FFC107] text-[#FFC107]" : "text-gray-300 dark:text-gray-600")} />
                     </button>
-
                   </div>
                 </motion.div>
               );
