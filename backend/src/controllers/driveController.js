@@ -246,22 +246,31 @@ const getStorageQuota = async (req, res) => {
 
     try {
       const rootRes = await drive.files.list({
-        q: "name = 'Keep In Mind' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+        q: "(name = 'Keep In Mind' or name = 'KeepInMind') and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
         fields: 'files(id)',
       });
 
       if (rootRes.data.files && rootRes.data.files.length > 0) {
-        const rootId = rootRes.data.files[0].id;
+        const rootIds = rootRes.data.files.map(f => f.id);
         
-        // Find subfolders too (like Gallery)
-        const subRes = await drive.files.list({
-          q: `'${rootId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
-          fields: 'files(id)',
+        // Find subfolders too (like Gallery, Government IDs, etc)
+        const subfolderPromises = rootIds.map(rootId => 
+          drive.files.list({
+            q: `'${rootId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+            fields: 'files(id)',
+          })
+        );
+        
+        const subfolderResponses = await Promise.all(subfolderPromises);
+        let allFolderIds = [...rootIds];
+        
+        subfolderResponses.forEach(res => {
+          if (res.data.files) {
+            allFolderIds.push(...res.data.files.map(f => f.id));
+          }
         });
-        
-        const folderIds = [rootId, ...(subRes.data.files || []).map(f => f.id)];
 
-        for (const fid of folderIds) {
+        for (const fid of allFolderIds) {
           const filesRes = await drive.files.list({
             q: `'${fid}' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'`,
             fields: 'files(id, size)',
