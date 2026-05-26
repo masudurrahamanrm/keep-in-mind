@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { formatDistanceToNow, parseISO, format } from 'date-fns';
+import { formatDistanceToNow, parseISO, format, isToday, isYesterday } from 'date-fns';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import { Plus, CheckSquare, Settings2, MoreHorizontal, Search, FileText, PenLine, Pin, Tag, Mic, Star, Menu, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -461,7 +461,14 @@ export default function Notes() {
                         try {
                           const date = parseISO(note.date);
                           if (isNaN(date.getTime())) return note.date;
-                          return format(date, 'MMM d, h:mm a');
+                          
+                          if (isToday(date)) {
+                            return format(date, 'h:mm a');
+                          } else if (isYesterday(date)) {
+                            return 'Yesterday';
+                          } else {
+                            return format(date, 'MMM d, yyyy');
+                          }
                         } catch {
                           return note.date;
                         }
