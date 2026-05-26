@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import { Plus, CheckSquare, Settings2, MoreHorizontal, Search, FileText, PenLine, Pin, Tag, Mic, Star, Menu, ChevronDown } from 'lucide-react';
@@ -236,6 +236,38 @@ export default function Notes() {
     return 'bg-[#FFF9EA] dark:bg-yellow-950/20';
   };
 
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const isLongPressTriggered = useRef(false);
+
+  const startPress = (e: any, note: any) => {
+    isLongPressTriggered.current = false;
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const spawnX = rect.left;
+    const spawnY = Math.min(rect.bottom + 4, window.innerHeight - 200);
+    
+    timerRef.current = setTimeout(() => {
+      isLongPressTriggered.current = true;
+      setContextMenu({ note, x: spawnX, y: spawnY });
+      timerRef.current = null;
+    }, 500);
+  };
+
+  const cancelPress = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  const handleNoteClick = (e: any, note: any) => {
+    if (isLongPressTriggered.current) {
+      e.preventDefault();
+      isLongPressTriggered.current = false;
+      return;
+    }
+    openNoteForEdit(note);
+  };
+
   return (
     <div className="max-w-4xl mx-auto w-full flex flex-col min-h-full relative z-10 px-4 pb-28 pt-2">
       
@@ -285,7 +317,21 @@ export default function Notes() {
               return (
                 <div
                   key={note.id}
-                  onClick={() => openNoteForEdit(note)}
+                  onClick={(e) => handleNoteClick(e, note)}
+                  onMouseDown={(e) => startPress(e, note)}
+                  onMouseUp={cancelPress}
+                  onMouseLeave={cancelPress}
+                  onTouchStart={(e) => startPress(e, note)}
+                  onTouchEnd={cancelPress}
+                  onTouchMove={cancelPress}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    if (!isLongPressTriggered.current) {
+                      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                      setContextMenu({ note, x: rect.left, y: Math.min(rect.bottom + 4, window.innerHeight - 200) });
+                      isLongPressTriggered.current = true;
+                    }
+                  }}
                   className="bg-[#FFF9EA] dark:bg-yellow-950/20 rounded-[24px] p-5 shadow-sm border border-black/5 dark:border-white/5 hover:shadow-md transition-all duration-300 relative flex justify-between items-start cursor-pointer group"
                 >
                   <div className="flex-1 min-w-0 pr-4">
@@ -376,7 +422,21 @@ export default function Notes() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
-                  onClick={() => openNoteForEdit(note)}
+                  onClick={(e) => handleNoteClick(e, note)}
+                  onMouseDown={(e) => startPress(e, note)}
+                  onMouseUp={cancelPress}
+                  onMouseLeave={cancelPress}
+                  onTouchStart={(e) => startPress(e, note)}
+                  onTouchEnd={cancelPress}
+                  onTouchMove={cancelPress}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    if (!isLongPressTriggered.current) {
+                      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                      setContextMenu({ note, x: rect.left, y: Math.min(rect.bottom + 4, window.innerHeight - 200) });
+                      isLongPressTriggered.current = true;
+                    }
+                  }}
                   className="bg-white dark:bg-[#1A1C20] rounded-[22px] p-4 shadow-sm border border-black/5 dark:border-white/5 hover:shadow-md transition-all duration-300 flex items-center gap-4 cursor-pointer relative group"
                 >
                   {/* Left 3D icon wrapper */}
@@ -419,16 +479,7 @@ export default function Notes() {
                     >
                       <Star size={16} className={cn(note.pinned ? "fill-[#FFC107] text-[#FFC107]" : "text-gray-300 dark:text-gray-600")} />
                     </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                        setContextMenu({ note, x: rect.left, y: rect.bottom + 4 });
-                      }}
-                      className="p-1.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-full transition-colors"
-                    >
-                      <MoreHorizontal size={16} />
-                    </button>
+
                   </div>
                 </motion.div>
               );
