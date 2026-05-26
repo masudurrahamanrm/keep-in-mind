@@ -237,10 +237,10 @@ export default function Notes() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto w-full flex flex-col h-full relative z-10 px-4 pb-28 pt-2">
+    <div className="max-w-4xl mx-auto w-full flex flex-col min-h-full relative z-10 px-4 pb-28 pt-2">
       
       {/* 1. GREETING BANNER CARD */}
-      <div className="w-full bg-[#FEF7D6] dark:from-[#2C2415] dark:to-[#42361C] rounded-[28px] p-6 mb-6 relative overflow-hidden shadow-sm" style={{height:'144px'}}>
+      <div className="w-full bg-[#FEF7D6] dark:from-[#2C2415] dark:to-[#42361C] rounded-[28px] p-6 mb-6 relative overflow-hidden shadow-sm shrink-0" style={{height:'144px'}}>
         <div className="relative z-10 w-2/3">
           <h2 className="text-[22px] font-bold text-gray-900 dark:text-amber-100 leading-tight mb-1">
             Good Morning, 👋
