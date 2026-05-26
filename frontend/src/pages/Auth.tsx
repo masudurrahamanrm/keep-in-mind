@@ -36,6 +36,45 @@ export default function Auth() {
 
   const from = location.state?.from?.pathname || '/notes';
 
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+
+  React.useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBanner(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    const handleAppInstalled = () => {
+      setDeferredPrompt(null);
+      setShowInstallBanner(false);
+    };
+
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setShowInstallBanner(false);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+      setShowInstallBanner(false);
+    }
+  };
+
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -413,34 +452,35 @@ export default function Auth() {
       </div>
       
       {/* BOTTOM INSTALL SECTION */}
-      <div className="w-full px-4 max-w-[380px] relative z-20 mt-4">
-        <div className="bg-gradient-to-r from-[#FFF3D6] to-[#FFEAB3] rounded-[16px] p-3 flex items-center gap-3 shadow-sm relative overflow-hidden">
-           
-           <button className="absolute top-2 right-2.5 text-gray-400 hover:text-gray-700 transition-colors z-10">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-           </button>
-           
-           <div className="w-11 h-11 bg-white rounded-full flex items-center justify-center shrink-0 shadow-sm relative z-10">
-              <div className="absolute -top-0.5 -left-0.5 text-[#FFC107]">
-                 <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15 9l7 1-5 5 1 7-7-4-7 4 1-7-5-5 7-1z"></path></svg>
-              </div>
-              <div className="absolute top-0.5 -right-0.5 text-[#FFC107]">
-                 <svg width="6" height="6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15 9l7 1-5 5 1 7-7-4-7 4 1-7-5-5 7-1z"></path></svg>
-              </div>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC107" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-           </div>
-           
-           <div className="flex flex-col flex-1 pr-5 z-10">
-              <span className="text-[12px] font-bold text-gray-900 leading-snug">Install KeepInMind</span>
-              <span className="text-[10px] text-gray-600 leading-tight mt-0.5">Install the app for a better experience and quick access.</span>
-           </div>
-           
-           <button className="bg-[#FFC107] hover:bg-[#F5B000] text-[#1A1F2C] font-bold text-[11.5px] px-3 py-1.5 rounded-[8px] flex items-center gap-1 shadow-md shadow-[#FFC107]/20 transition-all shrink-0 z-10">
-              Install 
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-           </button>
+      {showInstallBanner && (
+        <div className="w-full px-4 max-w-[380px] relative z-20 mt-4">
+          <div className="bg-gradient-to-r from-[#FFF3D6] to-[#FFEAB3] rounded-[16px] p-3 flex items-center gap-3 shadow-sm relative overflow-hidden">
+             
+             <div className="w-11 h-11 bg-white rounded-full flex items-center justify-center shrink-0 shadow-sm relative z-10">
+                <div className="absolute -top-0.5 -left-0.5 text-[#FFC107]">
+                   <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15 9l7 1-5 5 1 7-7-4-7 4 1-7-5-5 7-1z"></path></svg>
+                </div>
+                <div className="absolute top-0.5 -right-0.5 text-[#FFC107]">
+                   <svg width="6" height="6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15 9l7 1-5 5 1 7-7-4-7 4 1-7-5-5 7-1z"></path></svg>
+                </div>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFC107" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+             </div>
+             
+             <div className="flex flex-col flex-1 pr-5 z-10">
+                <span className="text-[12px] font-bold text-gray-900 leading-snug">Install KeepInMind</span>
+                <span className="text-[10px] text-gray-600 leading-tight mt-0.5">Install the app for a better experience and quick access.</span>
+             </div>
+             
+             <button 
+               onClick={handleInstallClick}
+               className="bg-[#FFC107] hover:bg-[#F5B000] text-[#1A1F2C] font-bold text-[11.5px] px-3 py-1.5 rounded-[8px] flex items-center gap-1 shadow-md shadow-[#FFC107]/20 transition-all shrink-0 z-10"
+             >
+                Install 
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+             </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* FOOTER TEXT */}
       <div className="w-full px-4 max-w-[380px] relative z-20 mt-4 mb-2">
