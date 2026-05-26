@@ -102,11 +102,15 @@ const uploadMedia = async (req, res) => {
     const driveFile = driveFileRes.data;
     console.log(`[Upload] Drive file created: ${driveFile.id}`);
 
-    // 4. Set permissions
-    await drive.permissions.create({
-      fileId: driveFile.id,
-      requestBody: { role: 'reader', type: 'anyone' }
-    });
+    // 4. Set permissions (Soft fail if organization blocks public sharing)
+    try {
+      await drive.permissions.create({
+        fileId: driveFile.id,
+        requestBody: { role: 'reader', type: 'anyone' }
+      });
+    } catch (permErr) {
+      console.warn(`[Upload] Could not set public permissions (likely organization restricted). Proceeding anyway. Error: ${permErr.message}`);
+    }
 
     // 5. Save to MongoDB
     console.log('[Upload] Saving metadata to MongoDB...');
@@ -136,7 +140,14 @@ const uploadMedia = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('[Upload Error] Details:', error);
+    console.error('[Upload Error] Details:', error.message);
+    if (error.response) {
+      console.error('[Upload Error] Google API Status:', error.response.status);
+      console.error('[Upload Error] Google API Data:', JSON.stringify(error.response.data, null, 2));
+    }
+    if (error.code) {
+      console.error('[Upload Error] Error Code:', error.code);
+    }
     
     // Cleanup temp file on error
     if (file && file.path) {
@@ -145,9 +156,12 @@ const uploadMedia = async (req, res) => {
       });
     }
 
-    res.status(500).json({
+    const status = error.response?.status || error.code || 500;
+    const googleError = error.response?.data?.error;
+    res.status(typeof status === 'number' ? status : 500).json({
       message: 'Upload processing failed',
       error: error.message,
+      googleError: googleError ? { code: googleError.code, message: googleError.message, reason: googleError.errors?.[0]?.reason } : undefined,
       data: error.response?.data
     });
   }
@@ -300,6 +314,7 @@ const getGalleryStorage = async (req, res) => {
     const rootRes = await drive.files.list({
       q: "name = 'Keep In Mind' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
       fields: 'files(id)',
+      spaces: 'drive',
     });
 
     if (!rootRes.data.files || rootRes.data.files.length === 0) {
@@ -313,6 +328,7 @@ const getGalleryStorage = async (req, res) => {
     const galRes = await drive.files.list({
       q: `name = 'Gallery' and '${rootId}' in parents and trashed = false`,
       fields: 'files(id)',
+      spaces: 'drive',
     });
 
     const folderIds = [rootId];
@@ -328,6 +344,7 @@ const getGalleryStorage = async (req, res) => {
       const filesRes = await drive.files.list({
         q: `'${fid}' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'`,
         fields: 'files(id, size)',
+        spaces: 'drive',
       });
 
       if (filesRes.data.files) {
@@ -347,9 +364,11 @@ const getGalleryStorage = async (req, res) => {
     res.json({ totalSize: displaySize, totalFiles });
 
   } catch (error) {
-    console.error('[Storage Error] Details:', error);
-    res.status(500).json({
-      message: 'Failed to calculate storage',
+    console.error('[Storage Error] Details:', error.message);
+    const status = error.response?.status || 500;
+    const isAuthError = status === 401 || status === 403;
+    res.status(status).json({
+      message: isAuthError ? 'Google token expired or insufficient permissions' : 'Failed to calculate storage',
       error: error.message,
       data: error.response?.data
     });
@@ -363,9 +382,9 @@ const getGalleryStorage = async (req, res) => {
  */
 const streamMedia = async (req, res) => {
   const { fileId } = req.params;
-  const { token, thumbnail } = req.query;
+  const { token, thumbnail, download } = req.query;
 
-  console.log(`[Stream Request] ID: ${fileId}, Thumbnail: ${thumbnail}`);
+  console.log(`[Stream Request] ID: ${fileId}, Thumbnail: ${thumbnail}, Download: ${download}`);
 
   if (!token || token === 'null' || token === 'undefined') {
     console.warn(`[Stream Error] Missing or invalid token for file: ${fileId}`);
@@ -404,6 +423,7 @@ const streamMedia = async (req, res) => {
     // For full media (Photo or Video)
     const mediaDoc = await Media.findOne({ fileId });
     const contentType = mediaDoc ? mediaDoc.fileType : 'application/octet-stream';
+    const fileName = mediaDoc ? mediaDoc.fileName : fileId;
 
     console.log(`[Stream] Starting stream for ${fileId} (${contentType})`);
 
@@ -413,8 +433,13 @@ const streamMedia = async (req, res) => {
     );
 
     res.setHeader('Content-Type', contentType);
-    // Explicitly allow ranges if we were to implement it, for now just pipe
     res.setHeader('Accept-Ranges', 'bytes');
+    if (download === 'true') {
+      const safeFileName = encodeURIComponent(fileName);
+      res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}"`);
+    } else {
+      res.setHeader('Content-Disposition', 'inline');
+    }
 
     driveResponse.data
       .on('error', (err) => {
@@ -426,7 +451,11 @@ const streamMedia = async (req, res) => {
   } catch (error) {
     console.error(`[Streaming Failed] ${fileId}:`, error.message);
     if (!res.headersSent) {
-      res.status(500).json({ message: 'Streaming failed', error: error.message });
+      const status = error.response?.status || 500;
+      res.status(status).json({ 
+        message: status === 401 ? '401 Unauthorized: Google token expired' : 'Streaming failed', 
+        error: error.message 
+      });
     }
   }
 };

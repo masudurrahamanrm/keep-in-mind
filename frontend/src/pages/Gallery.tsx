@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Loader2, Image as ImagePlaceholder, History, LayoutGrid, LayoutList, Trash2 } from 'lucide-react';
+import { Search, Loader2, Image as ImagePlaceholder, History, Trash2, CloudOff, X as XIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import MediaCard from '../components/MediaCard';
 import axios from 'axios';
@@ -8,14 +8,14 @@ import MediaUploadFAB from '../components/MediaUploadFAB';
 import MediaViewer from '../modals/MediaViewer';
 import RenameModal from '../modals/RenameModal';
 import ConfirmDeleteModal from '../modals/ConfirmDeleteModal';
-import UploadProgressCard, { UploadStatus } from '../components/UploadProgressCard';
+import { UploadStatus } from '../components/UploadProgressCard';
 import UploadActivityCenter from '../components/UploadActivityCenter';
 
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 export default function Gallery() {
-  const { token, googleAccessToken, signOut } = useAuth();
+  const { token, googleAccessToken, signOut, clearGoogleToken } = useAuth();
   const [media, setMedia] = useState<any[]>([]);
   const [storage, setStorage] = useState<{ totalSize: string, totalFiles: number } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,6 +29,8 @@ export default function Gallery() {
   const [imageCount, setImageCount] = useState(0);
   const [videoCount, setVideoCount] = useState(0);
   const [trashCount, setTrashCount] = useState(0);
+  const [noGoogleDrive, setNoGoogleDrive] = useState(false);
+  const isGoogleConnected = !!(googleAccessToken && googleAccessToken !== 'undefined' && googleAccessToken !== 'null');
 
   // Batch Selection State
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -48,10 +50,17 @@ export default function Gallery() {
   } | null>(null);
 
   const handleAuthError = (err: any) => {
-    if (err.status === 401 || err.response?.status === 401) {
-      console.error('[Gallery Auth Error] Google session expired.');
+    const status = err.status || err.response?.status;
+    const message = err.response?.data?.error || err.response?.data?.message || err.message || '';
+    const isGoogleExpired = status === 401 || status === 403 ||
+      (typeof message === 'string' && (message.includes('401') || message.includes('403') || message.includes('invalid_grant') || message.includes('Token has been expired') || message.includes('insufficient')));
+    
+    if (isGoogleExpired) {
+      console.warn('[Gallery] Google token expired — clearing token, user stays logged in.');
       localStorage.removeItem('googleToken');
-      signOut();
+      // Only clear Google token, don't sign out the whole app
+      clearGoogleToken();
+      setNoGoogleDrive(true);
       return true;
     }
     return false;
@@ -71,8 +80,8 @@ export default function Gallery() {
         }
       });
       
-      if (res.status === 401) {
-        handleAuthError({ status: 401 });
+      if (res.status === 401 || res.status === 403) {
+        handleAuthError({ status: res.status });
         return;
       }
 
@@ -113,11 +122,28 @@ export default function Gallery() {
     }
   };
 
+  // Fetch trash count on initial load so tab shows correct count
+  const fetchTrashCount = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE}/gallery/trash`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTrashCount(data.length);
+      }
+    } catch {
+      // silently ignore
+    }
+  };
+
   useEffect(() => {
     if (filterType === 'trash') {
       fetchTrash();
     } else {
       fetchMedia();
+      fetchTrashCount(); // keep trash count fresh when browsing active media
     }
   }, [token, filterType]);
 
@@ -143,16 +169,13 @@ export default function Gallery() {
     }
   };
 
-  const handleUploadSuccess = (newItem: any) => {
-    setMedia(prev => [newItem, ...prev]);
-    setActiveCount(prev => prev + 1);
-    if (newItem.fileType.startsWith('image/')) setImageCount(prev => prev + 1);
-    else if (newItem.fileType.startsWith('video/')) setVideoCount(prev => prev + 1);
-    fetchStorage(); // Refresh storage
-  };
-
   const uploadFile = async (file: File) => {
-    if (!token || !googleAccessToken) return;
+    if (!token) return;
+    if (!isGoogleConnected) {
+      setNoGoogleDrive(true);
+      return;
+    }
+    setNoGoogleDrive(false);
 
     const uploadId = Math.random().toString(36).substring(7);
     const newUpload = { id: uploadId, name: file.name, progress: 0, status: 'uploading' as UploadStatus };
@@ -161,7 +184,7 @@ export default function Gallery() {
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('googleAccessToken', googleAccessToken);
+    formData.append('googleAccessToken', googleAccessToken!);
 
     try {
       const { data } = await axios.post(`${API_BASE}/gallery/upload`, formData, {
@@ -192,8 +215,14 @@ export default function Gallery() {
         timestamp: new Date()
       }, ...prev]);
 
-      setMedia(prev => [data.media, ...prev]);
+      // Update media list and counts
+      const uploaded = data.media;
+      setMedia(prev => [uploaded, ...prev]);
+      setActiveCount(prev => prev + 1);
+      if (uploaded.fileType?.startsWith('image/')) setImageCount(prev => prev + 1);
+      else if (uploaded.fileType?.startsWith('video/')) setVideoCount(prev => prev + 1);
       fetchStorage();
+
 
       setTimeout(() => {
         setUploadQueue(prev => prev.filter(item => item.id !== uploadId));
@@ -415,6 +444,30 @@ export default function Gallery() {
 
   return (
     <div className="max-w-7xl mx-auto w-full flex flex-col h-full relative z-10">
+
+      {/* No Google Drive Connection Banner */}
+      <AnimatePresence>
+        {noGoogleDrive && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: 'auto' }}
+            exit={{ opacity: 0, y: -10, height: 0 }}
+            className="mb-4 overflow-hidden"
+          >
+            <div className="flex items-start gap-3 p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-amber-700 dark:text-amber-400">
+              <CloudOff size={20} className="shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-bold text-sm">Google Drive Not Connected</p>
+                <p className="text-xs mt-0.5 opacity-80">Uploads require a connected Google account. Go to <strong>Profile → Manage Backup</strong> to connect your Drive.</p>
+              </div>
+              <button onClick={() => setNoGoogleDrive(false)} className="shrink-0 p-1 hover:bg-amber-500/20 rounded-full transition-all">
+                <XIcon size={14} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 md:mb-10 gap-4">
         <div className="space-y-1">

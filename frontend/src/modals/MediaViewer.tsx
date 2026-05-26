@@ -48,9 +48,12 @@ export default function MediaViewer({ media, onClose, onNext, onPrev, onRename }
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const directLink = (googleAccessToken && googleAccessToken !== 'undefined' && googleAccessToken !== 'null')
+  const isValidToken = !!(googleAccessToken && googleAccessToken !== 'undefined' && googleAccessToken !== 'null');
+  const streamBase = isValidToken
     ? `${API_BASE}/gallery/stream/${media.fileId}?token=${googleAccessToken}`
-    : media.fileUrl; // Fallback to original URL if possible
+    : null;
+  const directLink = streamBase ?? media.fileUrl;
+  const downloadLink = streamBase ? `${streamBase}&download=true` : media.fileUrl;
 
   // Idle Detection for Auto-hide Controls
   const resetIdleTimer = useCallback(() => {
@@ -240,7 +243,7 @@ export default function MediaViewer({ media, onClose, onNext, onPrev, onRename }
             
             <div className="flex items-center gap-2 md:gap-4">
               <button 
-                onClick={() => window.open(directLink + '&download=true')} 
+                onClick={() => window.open(downloadLink, '_blank')} 
                 className="p-2.5 md:p-3 bg-white/5 hover:bg-primary text-white rounded-2xl transition-all backdrop-blur-xl border border-white/5 active:scale-90"
                 title="Download"
               >

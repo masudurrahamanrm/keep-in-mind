@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 
 export default function Account() {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, googleAccessToken } = useAuth();
 
   const profileKey = user ? `keep-in-mind-profile-${user._id}` : 'keep-in-mind-profile-guest';
 
@@ -89,16 +89,31 @@ export default function Account() {
       <div className="px-5 pt-6 space-y-5">
 
         {/* Storage Card */}
-        <div className="bg-white dark:bg-neutral-800 rounded-2xl p-5 shadow-sm border border-white/50 flex items-center justify-between">
+        <div 
+          className="bg-white dark:bg-neutral-800 rounded-2xl p-5 shadow-sm border border-white/50 flex items-center justify-between cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
+          onClick={() => navigate('/cloud-sync')}
+        >
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
-              <Cloud size={22} className="text-blue-500" />
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${googleAccessToken ? 'bg-green-50 dark:bg-green-900/20' : 'bg-blue-50 dark:bg-blue-900/20'}`}>
+              <Cloud size={22} className={googleAccessToken ? 'text-green-500' : 'text-blue-500'} />
             </div>
             <div>
               <h2 className="font-semibold text-neutral-800 dark:text-neutral-100 text-[15px] mb-0.5">Google Drive Sync</h2>
-              <p className="text-neutral-500 dark:text-neutral-400 text-[13px] mb-3 leading-snug">Securely back up your notes</p>
-              <button className="bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold py-1.5 px-4 rounded-full transition-colors shadow-sm">
-                Manage Backup
+              <p className="text-neutral-500 dark:text-neutral-400 text-[13px] mb-3 leading-snug">
+                {googleAccessToken ? 'Connected — Tap to manage backup' : 'Connect to back up your notes'}
+              </p>
+              <button 
+                className={`text-white text-xs font-semibold py-1.5 px-4 rounded-full transition-colors shadow-sm ${
+                  googleAccessToken 
+                    ? 'bg-green-500 hover:bg-green-600' 
+                    : 'bg-blue-500 hover:bg-blue-600'
+                }`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate('/cloud-sync');
+                }}
+              >
+                {googleAccessToken ? 'Manage Backup' : 'Connect Drive'}
               </button>
             </div>
           </div>

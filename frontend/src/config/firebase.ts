@@ -25,11 +25,14 @@ export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
-// ── Drive scope for note file sync ──────────────────────────
-// drive.file: create/read/update files created by this app (needed for note sync)
-// NOTE: drive.metadata.readonly was removed — it's a restricted scope that triggers
-// Google's "app not verified" warning. Use Google Cloud Console → OAuth consent screen
-// → Test users to add your email and bypass the warning during development.
-googleProvider.addScope('https://www.googleapis.com/auth/drive.file');
+// ── Drive scopes ────────────────────────────────────────────
+// drive: Full read/write access to Google Drive files.
+//   Grants: See, edit, create, and delete all Drive files.
+//   This is required for gallery uploads, storage quota, note sync, and thumbnail access.
+//
+// ⚠️  This is a "restricted" scope. During development, add your email as a
+//     Test User in Google Cloud Console → OAuth consent screen to bypass the
+//     "Google hasn't verified this app" warning.
+googleProvider.addScope('https://www.googleapis.com/auth/drive');
 
 export default app;

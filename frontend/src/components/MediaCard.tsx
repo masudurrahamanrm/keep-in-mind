@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Trash2, Download, Image as ImageIcon, Video, Calendar, HardDrive, Maximize2, Pencil, History, Check } from 'lucide-react';
 import { format } from 'date-fns';
@@ -63,6 +63,7 @@ export default function MediaCard({
   const thumbnailSrc = isValidToken 
     ? `${API_BASE}/gallery/stream/${media.fileId}?token=${googleAccessToken}&thumbnail=true`
     : null;
+  const [thumbnailError, setThumbnailError] = useState(false);
   
   const formatSize = (bytes: number) => {
     if (!bytes) return '0 B';
@@ -98,18 +99,15 @@ export default function MediaCard({
     >
       {/* Thumbnail Layer */}
       <div className="absolute inset-0">
-        {thumbnailSrc ? (
+        {thumbnailSrc && !thumbnailError ? (
           <img
             src={thumbnailSrc}
             alt={media.fileName}
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-              (e.target as HTMLImageElement).parentElement?.querySelector('.placeholder-icon')?.classList.remove('hidden');
-            }}
+            onError={() => setThumbnailError(true)}
           />
         ) : (
-          <div className="placeholder-icon hidden flex h-full w-full items-center justify-center text-on-surface-variant/30">
+          <div className="flex h-full w-full items-center justify-center text-on-surface-variant/30 bg-surface-container-high">
             {isVideo ? <Video size={32} /> : <ImageIcon size={32} />}
           </div>
         )}

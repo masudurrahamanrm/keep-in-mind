@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FileText, Compass, Clock, Inbox, Users, Activity, Settings, User, X, LogOut, ChevronRight } from 'lucide-react';
+import { FileText, Compass, Clock, Image as ImageIcon, Users, Activity, Settings, User, X, LogOut, ChevronRight } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useAuth } from '../context/AuthContext';
@@ -27,9 +27,9 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onMobileClose }: Si
   ];
 
   const spaces = [
-    { path: '/gallery', label: 'Personal', icon: Inbox    },
+    { path: '/gallery', label: 'Personal', icon: ImageIcon },
     { path: '/labels',  label: 'Labels',   icon: Users    },
-    { path: '/archive', label: 'Health',   icon: Activity },
+    { path: '/archive', label: 'Archive',  icon: Activity },
   ];
 
   const renderLinks = (items: { path: string; label: string; icon: any }[]) => (

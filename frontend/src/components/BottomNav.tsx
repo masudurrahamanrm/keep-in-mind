@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { FileText, CheckCircle2, Bell, User, Inbox } from 'lucide-react';
+import { FileText, CheckCircle2, Bell, User, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { cn } from '../lib/utils';
 
@@ -7,11 +7,11 @@ export default function BottomNav() {
   const location = useLocation();
   const { user } = useAuth();
 
-  const links = [
+  const links: { path: string; label: string; icon: any; isAvatar?: boolean; badge?: number }[] = [
     { path: '/notes', label: 'Notes', icon: FileText },
     { path: '/tasks', label: 'Tasks', icon: CheckCircle2 },
     { path: '/reminders', label: 'Reminders', icon: Bell },
-    { path: '/gallery', label: 'Personal', icon: Inbox },
+    { path: '/gallery', label: 'Personal', icon: ImageIcon },
     { path: '/account', label: 'Profile', icon: User, isAvatar: true },
   ];
 

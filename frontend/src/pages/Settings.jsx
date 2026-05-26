@@ -242,11 +242,11 @@ export default function Settings() {
         <section>
           <SectionLabel>Data &amp; Sync</SectionLabel>
           <Card>
-            <div onClick={handleDriveSync} className="cursor-pointer">
-              <LinkRow icon={Cloud}          label="Cloud Sync"        value={lastSynced ? 'On' : 'On'} />
+            <div onClick={() => navigate('/cloud-sync')} className="cursor-pointer">
+              <LinkRow icon={Cloud}          label="Cloud Sync"        value={lastSynced ? 'On' : 'Off'} />
             </div>
             <Divider />
-            <div onClick={handleDriveRestore} className="cursor-pointer">
+            <div onClick={() => navigate('/cloud-sync')} className="cursor-pointer">
               <LinkRow icon={ArchiveRestore} label="Backup & Restore" />
             </div>
             <Divider />

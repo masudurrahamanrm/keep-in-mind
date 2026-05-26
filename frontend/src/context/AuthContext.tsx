@@ -26,8 +26,12 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   token: null,
+  googleAccessToken: null,
   loading: true,
   login: () => {},
+  updateGoogleToken: () => {},
+  updateUser: () => {},
+  clearGoogleToken: () => {},
   signOut: () => {},
 });
 

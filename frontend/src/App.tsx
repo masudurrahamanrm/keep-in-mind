@@ -39,6 +39,7 @@ const Drawing = lazy(() => import('./pages/Drawing'));
 const Editor  = lazy(() => import('./pages/Editor'));
 const Tasks   = lazy(() => import('./pages/Tasks'));
 const Reminders = lazy(() => import('./pages/Reminders'));
+const CloudSync = lazy(() => import('./pages/CloudSync'));
 
 // ── Guard: redirect to /notes if already signed in ─────────
 function PublicRoute({ children }: { children: ReactNode }) {
@@ -115,6 +116,7 @@ export default function App() {
           <Route path="explore/:id" element={<Suspense fallback={<PageLoader />}><ExplorePost /></Suspense>} />
           <Route path="recent"   element={<Suspense fallback={<PageLoader />}><Recent /></Suspense>}  />
           <Route path="settings" element={<Suspense fallback={<PageLoader />}><Settings /></Suspense>}/>
+          <Route path="cloud-sync" element={<Suspense fallback={<PageLoader />}><CloudSync /></Suspense>}/>
         </Route>
 
         {/* Private: Full-screen / Immersive views WITHOUT global layout */}
