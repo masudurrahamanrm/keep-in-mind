@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, ChevronRight, Edit2, Crown, BarChart2, Star, Archive, HelpCircle, Info, Trash2 } from 'lucide-react';
+import { LogOut, ChevronRight, Edit2, Crown, BarChart2, Star, Archive, HelpCircle, Info, Trash2, Cloud } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Account() {
@@ -40,7 +40,7 @@ export default function Account() {
   const menuGroup1 = [
     { icon: BarChart2, label: 'My Stats',  color: '#FF9E4A', path: null },
     { icon: Star,      label: 'Favorites', color: '#FDCB58', path: null },
-    { icon: Trash2,    label: 'Trash',     color: '#F87171', path: null },
+    { icon: Trash2,    label: 'Trash',     color: '#F87171', path: '/trash' },
     { icon: Archive,   label: 'Archived',  color: '#FF9E4A', path: '/archive' },
   ];
 
@@ -88,17 +88,17 @@ export default function Account() {
       {/* ── Main Content ─────────────────────────────────────────────── */}
       <div className="px-5 pt-6 space-y-5">
 
-        {/* Premium Card */}
+        {/* Storage Card */}
         <div className="bg-white dark:bg-neutral-800 rounded-2xl p-5 shadow-sm border border-white/50 flex items-center justify-between">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-full bg-[#FFF9ED] flex items-center justify-center shrink-0">
-              <Crown size={22} color="#FDCB58" />
+            <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
+              <Cloud size={22} className="text-blue-500" />
             </div>
             <div>
-              <h2 className="font-semibold text-neutral-800 dark:text-neutral-100 text-[15px] mb-0.5">KeepInMind Premium</h2>
-              <p className="text-neutral-500 dark:text-neutral-400 text-[13px] mb-3 leading-snug">Unlock all premium features</p>
-              <button className="bg-[#FDCB58] hover:bg-[#FF9E4A] text-white text-xs font-semibold py-1.5 px-4 rounded-full transition-colors shadow-sm">
-                Go Premium
+              <h2 className="font-semibold text-neutral-800 dark:text-neutral-100 text-[15px] mb-0.5">Google Drive Sync</h2>
+              <p className="text-neutral-500 dark:text-neutral-400 text-[13px] mb-3 leading-snug">Securely back up your notes</p>
+              <button className="bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold py-1.5 px-4 rounded-full transition-colors shadow-sm">
+                Manage Backup
               </button>
             </div>
           </div>

@@ -113,7 +113,7 @@ export default function Notes() {
   // Separate pinned and unpinned notes
   const { pinnedNotes, allNotes } = useMemo(() => {
     const result = notes.filter(note => {
-      if (note.archived) return false;
+      if (note.archived || note.trashed) return false;
       const matchesSearch = !searchQuery || 
         note.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
         note.content.toLowerCase().includes(searchQuery.toLowerCase());
@@ -142,7 +142,7 @@ export default function Notes() {
   };
 
   const handleDeleteNote = (noteId: number) => {
-    setNotes(notes.filter(n => n.id !== noteId));
+    setNotes(notes.map(n => n.id === noteId ? { ...n, trashed: true, pinned: false } : n));
     setContextMenu(null);
   };
 
@@ -372,7 +372,7 @@ export default function Notes() {
                       </div>
                     ) : (
                       <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold line-clamp-3">
-                        {note.content}
+                        {note.content ? note.content.replace(/<[^>]*>?/gm, '') : ''}
                       </p>
                     )}
                   </div>
@@ -449,8 +449,8 @@ export default function Notes() {
                     <h4 className="text-sm font-black text-gray-900 dark:text-gray-100 truncate pr-4 mb-1">
                       {note.title}
                     </h4>
-                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 truncate pr-6">
-                      {previewText}
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 line-clamp-2 pr-6">
+                      {previewText ? previewText.replace(/<[^>]*>?/gm, '') : ''}
                     </p>
                   </div>
 

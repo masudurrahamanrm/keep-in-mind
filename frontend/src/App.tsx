@@ -30,6 +30,7 @@ const Gallery = lazy(() => import('./pages/Gallery'));
 const Account = lazy(() => import('./pages/Account'));
 const Labels = lazy(() => import('./pages/Labels'));
 const Archive = lazy(() => import('./pages/Archive'));
+const Trash = lazy(() => import('./pages/Trash'));
 const Explore = lazy(() => import('./pages/Explore'));
 const ExplorePost = lazy(() => import('./pages/ExplorePost'));
 const Recent = lazy(() => import('./pages/Recent'));
@@ -107,6 +108,7 @@ export default function App() {
           <Route path="gallery"  element={<Suspense fallback={<PageLoader />}><Gallery /></Suspense>} />
           <Route path="labels"   element={<Suspense fallback={<PageLoader />}><Labels /></Suspense>}  />
           <Route path="archive"  element={<Suspense fallback={<PageLoader />}><Archive /></Suspense>} />
+          <Route path="trash"    element={<Suspense fallback={<PageLoader />}><Trash /></Suspense>} />
           <Route path="account"  element={<Suspense fallback={<PageLoader />}><Account /></Suspense>} />
           <Route path="tasks"    element={<Suspense fallback={<PageLoader />}><Tasks /></Suspense>} />
           <Route path="reminders" element={<Suspense fallback={<PageLoader />}><Reminders /></Suspense>} />
