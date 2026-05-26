@@ -204,26 +204,28 @@ export default function Auth() {
 
       {/* TOP SECTION */}
       <div className="w-full flex flex-col items-center pt-3 md:pt-4 relative z-10 px-4 shrink-0 -mt-1">
-        <img 
-          src="/app-icon-generated.png" 
-          alt="KeepInMind Logo" 
-          className="w-[40px] h-[40px] rounded-[10px] shadow-lg shadow-[#FFC107]/25 mb-1.5 object-cover mix-blend-multiply" 
-        />
-        <h1 className="text-[19px] font-extrabold tracking-tight text-[#1A1F2C] text-center mb-0.5">
-           KeepIn<span className="text-[#FFC107]">Mind</span>
-        </h1>
-        <p className="text-[10px] font-medium text-gray-500 text-center mb-4">
-           Your thoughts, always organized.
-        </p>
+        <div className="flex flex-col items-center relative z-20">
+          <img 
+            src="/app-icon-generated.png" 
+            alt="KeepInMind Logo" 
+            className="w-[48px] h-[48px] rounded-[12px] shadow-lg shadow-[#FFC107]/25 mb-1.5 object-cover mix-blend-multiply" 
+          />
+          <h1 className="text-[19px] font-extrabold tracking-tight text-[#1A1F2C] text-center mb-0.5">
+             KeepIn<span className="text-[#FFC107]">Mind</span>
+          </h1>
+          <p className="text-[10px] font-medium text-gray-500 text-center mb-4">
+             Your thoughts, always organized.
+          </p>
+        </div>
 
         {/* Illustration */}
-        <div className="w-full max-w-[380px] h-[230px] flex justify-center items-center relative z-10 -mt-4 md:-mt-6">
+        <div className="w-full max-w-[490px] h-[300px] flex justify-center items-center relative z-10 -mt-2 md:-mt-3">
            <img src="/user-provided-notebook.jpg" alt="Notebook" className="h-full w-full object-contain drop-shadow-[0_15px_25px_rgba(0,0,0,0.12)] mix-blend-multiply" />
         </div>
       </div>
 
       {/* CENTER AUTH CARD */}
-      <div className="w-full px-4 max-w-[380px] relative z-20 -mt-20 md:-mt-24">
+      <div className="w-full px-4 max-w-[380px] relative z-20 -mt-28 md:-mt-32">
         <div className="bg-white/95 backdrop-blur-xl rounded-[24px] w-full shadow-[0_20px_60px_rgb(0,0,0,0.06)] border border-white flex flex-col p-5 md:p-6">
           
           <AnimatePresence mode="wait">
