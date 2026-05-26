@@ -2,10 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ChevronLeft, ChevronRight,
-  Sun, Clock, Type, ALargeSmall,
-  Moon, Sparkles, Volume2,
+  Sun, Clock, Moon, Sparkles, Volume2,
   Cloud, ArchiveRestore, Download,
-  Bell, Lock
+  Bell, Lock, Type, ALargeSmall
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -13,97 +12,126 @@ import { syncNotesToGoogleDrive, fetchNotesFromGoogleDrive } from '../services/d
 import { auth } from '../config/firebase';
 import PasswordModal from '../modals/PasswordModal';
 
-/* ─── Reusable row components ──────────────────────────────────────── */
-
-function SectionLabel({ children }) {
-  return (
-    <p className="text-[#D4A017] font-semibold text-sm px-1 pt-5 pb-2">
-      {children}
-    </p>
-  );
-}
-
-function RowCard({ children }) {
-  return (
-    <div className="bg-white dark:bg-neutral-800 rounded-2xl overflow-hidden shadow-sm">
-      {children}
-    </div>
-  );
-}
-
-function Row({ icon: Icon, iconColor = '#D4A017', label, right, onPress, divider = true }) {
-  return (
-    <button
-      onClick={onPress}
-      className="w-full flex items-center gap-3 px-4 py-[14px] text-left hover:bg-black/[0.03] dark:hover:bg-white/[0.04] active:bg-black/[0.06] transition-colors"
-    >
-      {/* Icon bubble */}
-      <span
-        className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-        style={{ backgroundColor: `${iconColor}22` }}
-      >
-        <Icon size={16} color={iconColor} strokeWidth={2.2} />
-      </span>
-
-      {/* Label */}
-      <span className="flex-1 text-sm font-medium text-neutral-800 dark:text-neutral-100">
-        {label}
-      </span>
-
-      {/* Right element */}
-      <span className="flex items-center gap-1 text-neutral-400 dark:text-neutral-500 text-sm shrink-0">
-        {right}
-      </span>
-
-      {/* Divider handled by CSS border on parent */}
-    </button>
-  );
-}
-
-function Divider() {
-  return <div className="h-px bg-neutral-100 dark:bg-neutral-700 ml-[60px]" />;
-}
-
-/* ─── Toggle Switch ─────────────────────────────────────────────────── */
+/* ─── Toggle ─────────────────────────────────────────────────────── */
 function Toggle({ checked, onChange }) {
   return (
     <button
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`relative w-12 h-7 rounded-full transition-colors duration-200 focus:outline-none ${
-        checked ? 'bg-[#FFC107]' : 'bg-neutral-300 dark:bg-neutral-600'
+      className={`relative w-[52px] h-7 rounded-full transition-colors duration-300 focus:outline-none ${
+        checked ? 'bg-[#FBBF24]' : 'bg-neutral-200 dark:bg-neutral-600'
       }`}
     >
       <span
-        className={`absolute top-[3px] left-[3px] w-[22px] h-[22px] rounded-full bg-white shadow-md transition-transform duration-200 ${
-          checked ? 'translate-x-5' : 'translate-x-0'
+        className={`absolute top-[2px] left-[2px] w-[24px] h-[24px] rounded-full bg-white shadow-md transition-transform duration-300 ${
+          checked ? 'translate-x-[24px]' : 'translate-x-0'
         }`}
       />
     </button>
   );
 }
 
-/* ─── Main Settings Page ────────────────────────────────────────────── */
+/* ─── Section Label ───────────────────────────────────────────────── */
+function SectionLabel({ children }) {
+  return (
+    <h2 className="text-[#F3A83B] font-semibold text-sm mb-3 ml-1">{children}</h2>
+  );
+}
+
+/* ─── Card Wrapper ────────────────────────────────────────────────── */
+function Card({ children }) {
+  return (
+    <div className="bg-white dark:bg-neutral-800 rounded-[20px] px-4 py-1 shadow-sm overflow-hidden">
+      {children}
+    </div>
+  );
+}
+
+/* ─── Divider ─────────────────────────────────────────────────────── */
+function Divider() {
+  return <div className="h-px bg-neutral-100 dark:bg-neutral-700" />;
+}
+
+/* ─── Standard Row (chevron right) ──────────────────────────────── */
+function LinkRow({ icon: Icon, label, value }) {
+  return (
+    <div className="flex items-center justify-between py-4 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
+      <div className="flex items-center gap-4">
+        <div className="text-[#F3A83B]">
+          <Icon size={22} strokeWidth={2} />
+        </div>
+        <span className="font-medium text-neutral-900 dark:text-neutral-100 text-[15px]">{label}</span>
+      </div>
+      <div className="flex items-center gap-2 text-neutral-400 dark:text-neutral-500 text-sm">
+        {value && <span>{value}</span>}
+        <ChevronRight size={16} strokeWidth={2} />
+      </div>
+    </div>
+  );
+}
+
+/* ─── Toggle Row ──────────────────────────────────────────────────── */
+function ToggleRow({ icon: Icon, label, checked, onChange, iconColor = '#F3A83B', darkIcon = false }) {
+  return (
+    <div className="flex items-center justify-between py-4">
+      <div className="flex items-center gap-4">
+        <div className={darkIcon ? 'text-neutral-500 dark:text-neutral-400' : ''} style={darkIcon ? {} : { color: iconColor }}>
+          <Icon size={22} strokeWidth={2} />
+        </div>
+        <span className="font-medium text-neutral-900 dark:text-neutral-100 text-[15px]">{label}</span>
+      </div>
+      <Toggle checked={checked} onChange={onChange} />
+    </div>
+  );
+}
+
+/* ─── Theme Color dot ─────────────────────────────────────────────── */
+function ThemeColorDot() {
+  return (
+    <div className="flex items-center gap-2 text-neutral-400 text-sm">
+      <span className="w-4 h-4 rounded-full bg-[#FBC02D] inline-block" />
+      <ChevronRight size={16} strokeWidth={2} />
+    </div>
+  );
+}
+
+/* ─── FontAT icon ─────────────────────────────────────────────────── */
+function FontATIcon({ size = 22, color = '#F3A83B' }) {
+  return (
+    <span style={{ color, fontWeight: 700, fontSize: size * 0.8, letterSpacing: '-1px', lineHeight: 1 }}>
+      AT
+    </span>
+  );
+}
+
+/* ─── TextSize icon ──────────────────────────────────────────────── */
+function TextSizeIcon({ color = '#F3A83B' }) {
+  return (
+    <span style={{ color, fontWeight: 600, lineHeight: 1 }}>
+      <span style={{ fontSize: 12 }}>a</span>
+      <span style={{ fontSize: 18 }}>A</span>
+    </span>
+  );
+}
+
+/* ─── Main ───────────────────────────────────────────────────────── */
 export default function Settings() {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
-  const { user, token, googleAccessToken, signOut } = useAuth();
+  const { user, token, googleAccessToken } = useAuth();
 
-  // Local UI state
-  const [darkMode, setDarkMode]           = useState(theme === 'dark');
-  const [animations, setAnimations]       = useState(true);
-  const [haptic, setHaptic]               = useState(true);
-  const [lockPasscode, setLockPasscode]   = useState(false);
-  const [isSyncing, setIsSyncing]         = useState(false);
-  const [isFetching, setIsFetching]       = useState(false);
+  const [darkMode, setDarkMode]         = useState(theme === 'dark');
+  const [animations, setAnimations]     = useState(true);
+  const [haptic, setHaptic]             = useState(true);
+  const [lockPasscode, setLockPasscode] = useState(false);
+  const [isSyncing, setIsSyncing]       = useState(false);
+  const [isFetching, setIsFetching]     = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   const hasPassword = auth.currentUser?.providerData?.some(p => p.providerId === 'password');
-
-  const notesKey   = user ? `keep-in-mind-notes-${user._id}`     : 'keep-in-mind-notes-guest';
+  const notesKey    = user ? `keep-in-mind-notes-${user._id}` : 'keep-in-mind-notes-guest';
   const syncTimeKey = user ? `keep-in-mind-last-sync-${user._id}` : 'keep-in-mind-last-sync-guest';
-
   const [lastSynced, setLastSynced] = useState(() => localStorage.getItem(syncTimeKey) || null);
 
   const handleDarkMode = (val) => {
@@ -115,17 +143,13 @@ export default function Settings() {
     if (!user || !token || !googleAccessToken) return;
     setIsSyncing(true);
     try {
-      const savedNotes = localStorage.getItem(notesKey);
-      const notes = savedNotes ? JSON.parse(savedNotes) : [];
+      const notes = JSON.parse(localStorage.getItem(notesKey) || '[]');
       await syncNotesToGoogleDrive(notes, googleAccessToken, token);
       const now = new Date().toLocaleString();
       setLastSynced(now);
       localStorage.setItem(syncTimeKey, now);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsSyncing(false);
-    }
+    } catch (err) { console.error(err); }
+    finally { setIsSyncing(false); }
   };
 
   const handleDriveRestore = async () => {
@@ -133,6 +157,7 @@ export default function Settings() {
     if (!window.confirm('This will replace all local notes with the Drive backup. Continue?')) return;
     setIsFetching(true);
     try {
+      const { fetchNotesFromGoogleDrive } = await import('../services/driveService');
       const data = await fetchNotesFromGoogleDrive(googleAccessToken, token);
       if (data?.notes) {
         localStorage.setItem(notesKey, JSON.stringify(data.notes));
@@ -140,138 +165,107 @@ export default function Settings() {
         setLastSynced(t);
         localStorage.setItem(syncTimeKey, t);
       }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsFetching(false);
-    }
+    } catch (err) { console.error(err); }
+    finally { setIsFetching(false); }
   };
 
   return (
-    <div className="min-h-full bg-[#FDFAF2] dark:bg-neutral-900 pb-28">
+    <div className="min-h-full bg-[#FCF7ED] dark:bg-neutral-900 pb-28">
+
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 pt-6 pb-2">
+      <div className="flex items-center px-4 pt-6 pb-3 relative">
         <button
           onClick={() => navigate(-1)}
-          className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+          className="p-2 -ml-2 text-neutral-800 dark:text-neutral-100 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
         >
-          <ChevronLeft size={22} className="text-neutral-800 dark:text-neutral-100" />
+          <ChevronLeft size={24} />
         </button>
-        <h1 className="text-xl font-bold text-neutral-900 dark:text-white tracking-tight">
+        <h1 className="absolute left-1/2 -translate-x-1/2 text-xl font-semibold text-neutral-900 dark:text-white">
           Settings
         </h1>
       </div>
 
-      <div className="px-4">
+      <div className="flex-1 overflow-y-auto px-5 pt-2 pb-12 space-y-8">
 
-        {/* ── Preferences ─────────────────────────────────────────── */}
-        <SectionLabel>Preferences</SectionLabel>
-        <RowCard>
-          <Row
-            icon={Sun}
-            label="Appearance"
-            right={<><span className="text-neutral-400 text-sm">Light</span><ChevronRight size={16} /></>}
-            onPress={() => {}}
-          />
-          <Divider />
-          <Row
-            icon={Clock}
-            label="Theme Color"
-            right={<><span className="w-4 h-4 rounded-full bg-[#FFC107] inline-block" /><ChevronRight size={16} /></>}
-            onPress={() => {}}
-          />
-          <Divider />
-          <Row
-            icon={Type}
-            label="Font Style"
-            right={<><span className="text-neutral-400 text-sm">Inter</span><ChevronRight size={16} /></>}
-            onPress={() => {}}
-          />
-          <Divider />
-          <Row
-            icon={ALargeSmall}
-            label="Text Size"
-            right={<><span className="text-neutral-400 text-sm">Medium</span><ChevronRight size={16} /></>}
-            onPress={() => {}}
-          />
-        </RowCard>
+        {/* ── Preferences ──────────────────────────────────────────── */}
+        <section>
+          <SectionLabel>Preferences</SectionLabel>
 
-        <div className="mt-3 bg-white dark:bg-neutral-800 rounded-2xl overflow-hidden shadow-sm">
-          {/* Enable Dark Mode */}
-          <div className="flex items-center gap-3 px-4 py-[14px]">
-            <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-neutral-100 dark:bg-neutral-700">
-              <Moon size={16} color="#555" strokeWidth={2.2} />
-            </span>
-            <span className="flex-1 text-sm font-medium text-neutral-800 dark:text-neutral-100">Enable Dark Mode</span>
-            <Toggle checked={darkMode} onChange={handleDarkMode} />
-          </div>
-          <Divider />
-          {/* Enable Animations */}
-          <div className="flex items-center gap-3 px-4 py-[14px]">
-            <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#FFC10722' }}>
-              <Sparkles size={16} color="#FFC107" strokeWidth={2.2} />
-            </span>
-            <span className="flex-1 text-sm font-medium text-neutral-800 dark:text-neutral-100">Enable Animations</span>
-            <Toggle checked={animations} onChange={setAnimations} />
-          </div>
-          <Divider />
-          {/* Haptic Feedback */}
-          <div className="flex items-center gap-3 px-4 py-[14px]">
-            <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#FFC10722' }}>
-              <Volume2 size={16} color="#FFC107" strokeWidth={2.2} />
-            </span>
-            <span className="flex-1 text-sm font-medium text-neutral-800 dark:text-neutral-100">Haptic Feedback</span>
-            <Toggle checked={haptic} onChange={setHaptic} />
-          </div>
-        </div>
+          {/* Group 1: chevron rows */}
+          <Card>
+            <LinkRow icon={Sun} label="Appearance" value="Light" />
+            <Divider />
+            <div className="flex items-center justify-between py-4 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
+              <div className="flex items-center gap-4">
+                <div className="text-[#F3A83B]"><Clock size={22} strokeWidth={2} /></div>
+                <span className="font-medium text-neutral-900 dark:text-neutral-100 text-[15px]">Theme Color</span>
+              </div>
+              <ThemeColorDot />
+            </div>
+            <Divider />
+            <div className="flex items-center justify-between py-4 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
+              <div className="flex items-center gap-4">
+                <div className="text-[#F3A83B]"><FontATIcon /></div>
+                <span className="font-medium text-neutral-900 dark:text-neutral-100 text-[15px]">Font Style</span>
+              </div>
+              <div className="flex items-center gap-2 text-neutral-400 text-sm">
+                <span>Inter</span>
+                <ChevronRight size={16} strokeWidth={2} />
+              </div>
+            </div>
+            <Divider />
+            <div className="flex items-center justify-between py-4 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
+              <div className="flex items-center gap-4">
+                <div className="text-[#F3A83B]"><TextSizeIcon /></div>
+                <span className="font-medium text-neutral-900 dark:text-neutral-100 text-[15px]">Text Size</span>
+              </div>
+              <div className="flex items-center gap-2 text-neutral-400 text-sm">
+                <span>Medium</span>
+                <ChevronRight size={16} strokeWidth={2} />
+              </div>
+            </div>
+          </Card>
 
-        {/* ── Data & Sync ──────────────────────────────────────────── */}
-        <SectionLabel>Data &amp; Sync</SectionLabel>
-        <RowCard>
-          <Row
-            icon={Cloud}
-            label="Cloud Sync"
-            right={<><span className="text-neutral-400 text-sm">{lastSynced ? 'On' : 'On'}</span><ChevronRight size={16} /></>}
-            onPress={handleDriveSync}
-          />
-          <Divider />
-          <Row
-            icon={ArchiveRestore}
-            label="Backup &amp; Restore"
-            right={<ChevronRight size={16} />}
-            onPress={handleDriveRestore}
-          />
-          <Divider />
-          <Row
-            icon={Download}
-            label="Export Notes"
-            right={<ChevronRight size={16} />}
-            onPress={() => {}}
-          />
-        </RowCard>
-
-        {/* ── General ─────────────────────────────────────────────── */}
-        <SectionLabel>General</SectionLabel>
-        <RowCard>
-          <Row
-            icon={Bell}
-            label="Notifications"
-            right={<ChevronRight size={16} />}
-            onPress={() => {}}
-          />
-          <Divider />
-          <div className="flex items-center gap-3 px-4 py-[14px]">
-            <span className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: '#FFC10722' }}>
-              <Lock size={16} color="#FFC107" strokeWidth={2.2} />
-            </span>
-            <span className="flex-1 text-sm font-medium text-neutral-800 dark:text-neutral-100">Lock with Passcode</span>
-            <Toggle checked={lockPasscode} onChange={setLockPasscode} />
+          {/* Group 2: toggle rows */}
+          <div className="mt-4">
+            <Card>
+              <ToggleRow icon={Moon}     label="Enable Dark Mode"   checked={darkMode}    onChange={handleDarkMode}   darkIcon />
+              <Divider />
+              <ToggleRow icon={Sparkles} label="Enable Animations"  checked={animations}  onChange={setAnimations} />
+              <Divider />
+              <ToggleRow icon={Volume2}  label="Haptic Feedback"    checked={haptic}      onChange={setHaptic} />
+            </Card>
           </div>
-        </RowCard>
+        </section>
+
+        {/* ── Data & Sync ───────────────────────────────────────────── */}
+        <section>
+          <SectionLabel>Data &amp; Sync</SectionLabel>
+          <Card>
+            <div onClick={handleDriveSync} className="cursor-pointer">
+              <LinkRow icon={Cloud}          label="Cloud Sync"        value={lastSynced ? 'On' : 'On'} />
+            </div>
+            <Divider />
+            <div onClick={handleDriveRestore} className="cursor-pointer">
+              <LinkRow icon={ArchiveRestore} label="Backup & Restore" />
+            </div>
+            <Divider />
+            <LinkRow icon={Download} label="Export Notes" />
+          </Card>
+        </section>
+
+        {/* ── General ──────────────────────────────────────────────── */}
+        <section>
+          <SectionLabel>General</SectionLabel>
+          <Card>
+            <LinkRow icon={Bell} label="Notifications" />
+            <Divider />
+            <ToggleRow icon={Lock} label="Lock with Passcode" checked={lockPasscode} onChange={setLockPasscode} />
+          </Card>
+        </section>
 
       </div>
 
-      {/* Password Modal (kept from original) */}
       <PasswordModal
         isOpen={isPasswordModalOpen}
         onClose={() => setIsPasswordModalOpen(false)}

@@ -240,29 +240,32 @@ export default function Notes() {
     <div className="max-w-4xl mx-auto w-full flex flex-col h-full relative z-10 px-4 pb-28 pt-2">
       
       {/* 1. GREETING BANNER CARD */}
-      <div className="w-full bg-gradient-to-br from-[#FFF3D6] to-[#FFEAB3] dark:from-[#2C2415] dark:to-[#42361C] rounded-[24px] p-5 md:p-6 mb-6 flex justify-between items-center relative overflow-hidden shadow-sm">
-        <div className="flex flex-col gap-1 relative z-10">
-          <h2 className="text-xl md:text-2xl font-black text-gray-900 dark:text-amber-100 tracking-tight flex items-center gap-1.5">
+      <div className="w-full bg-[#FEF7D6] dark:from-[#2C2415] dark:to-[#42361C] rounded-[28px] p-6 mb-6 relative overflow-hidden shadow-sm" style={{height:'144px'}}>
+        <div className="relative z-10 w-2/3">
+          <h2 className="text-[22px] font-bold text-gray-900 dark:text-amber-100 leading-tight mb-1">
             Good Morning, 👋
           </h2>
-          <p className="text-xs font-bold text-gray-700/80 dark:text-amber-200/80">
+          <p className="text-sm text-gray-600 dark:text-amber-200/80">
             What are your thoughts today?
           </p>
         </div>
-        <div className="w-[76px] h-[76px] relative shrink-0 z-10 flex items-center justify-center">
-           <img src="/lightbulb-3d.png" alt="Lightbulb" className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
+        {/* Decorative glow */}
+        <div className="absolute right-[-10px] bottom-[-20px] w-32 h-32 bg-yellow-300 rounded-full opacity-20 blur-2xl pointer-events-none" />
+        {/* 3D Lightbulb */}
+        <div className="absolute right-0 bottom-0 w-32 h-full flex items-end justify-center pr-2 pb-2">
+          <img src="/lightbulb-3d.png" alt="Lightbulb" className="h-24 w-auto object-contain drop-shadow-md" />
         </div>
-        <div className="absolute -bottom-8 -right-8 w-24 h-24 bg-white/20 rounded-full blur-xl pointer-events-none" />
       </div>
 
       {/* 2. PINNED NOTES SECTION */}
       {pinnedNotes.length > 0 && (
         <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-base font-black text-gray-900 dark:text-gray-100 flex items-center gap-1.5 tracking-tight">
-              📌 Pinned Notes
-            </h3>
-            <button className="text-xs font-bold text-[#FFC107] hover:text-[#F5B000] transition-colors">
+          <div className="flex justify-between items-center mb-4 px-1">
+            <div className="flex items-center gap-2">
+              <Pin size={14} className="text-[#FBBF24]" fill="#FBBF24" />
+              <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Pinned Notes</h3>
+            </div>
+            <button className="text-xs font-medium text-[#FBBF24] hover:text-[#F5B000] transition-colors">
               View all
             </button>
           </div>
@@ -341,12 +344,13 @@ export default function Notes() {
 
       {/* 3. ALL NOTES SECTION */}
       <div>
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-base font-black text-gray-900 dark:text-gray-100 flex items-center gap-1.5 tracking-tight">
-            ⚔️ All Notes
-          </h3>
-          <button className="flex items-center gap-1 text-xs font-bold text-gray-500 hover:text-gray-700 transition-colors">
-            Recent <ChevronDown size={14} strokeWidth={3} />
+        <div className="flex justify-between items-center mb-4 px-1">
+          <div className="flex items-center gap-2">
+            <FileText size={14} className="text-gray-400" />
+            <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">All Notes</h3>
+          </div>
+          <button className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors">
+            Recent <ChevronDown size={12} strokeWidth={2.5} />
           </button>
         </div>
 
