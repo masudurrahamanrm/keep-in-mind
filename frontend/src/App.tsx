@@ -37,6 +37,7 @@ const Settings = lazy(() => import('./pages/Settings'));
 const Drawing = lazy(() => import('./pages/Drawing'));
 const Editor  = lazy(() => import('./pages/Editor'));
 const Tasks   = lazy(() => import('./pages/Tasks'));
+const Reminders = lazy(() => import('./pages/Reminders'));
 
 // ── Guard: redirect to /notes if already signed in ─────────
 function PublicRoute({ children }: { children: ReactNode }) {
@@ -108,6 +109,7 @@ export default function App() {
           <Route path="archive"  element={<Suspense fallback={<PageLoader />}><Archive /></Suspense>} />
           <Route path="account"  element={<Suspense fallback={<PageLoader />}><Account /></Suspense>} />
           <Route path="tasks"    element={<Suspense fallback={<PageLoader />}><Tasks /></Suspense>} />
+          <Route path="reminders" element={<Suspense fallback={<PageLoader />}><Reminders /></Suspense>} />
           <Route path="explore/:id" element={<Suspense fallback={<PageLoader />}><ExplorePost /></Suspense>} />
           <Route path="recent"   element={<Suspense fallback={<PageLoader />}><Recent /></Suspense>}  />
           <Route path="settings" element={<Suspense fallback={<PageLoader />}><Settings /></Suspense>}/>
