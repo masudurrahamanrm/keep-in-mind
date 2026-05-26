@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Search, Loader2, Image as ImagePlaceholder, History, Trash2, CloudOff, X as XIcon,
@@ -19,6 +20,7 @@ import UploadActivityCenter from '../components/UploadActivityCenter';
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 export default function Gallery() {
+  const navigate = useNavigate();
   const { token, googleAccessToken, signOut, clearGoogleToken } = useAuth();
   const [media, setMedia] = useState<any[]>([]);
   const [storage, setStorage] = useState<{ totalSize: string, totalFiles: number } | null>(null);
@@ -39,6 +41,9 @@ export default function Gallery() {
   // Batch Selection State
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isSelectionMode, setIsSelectionMode] = useState(false);
+  
+  // Document Counts
+  const [docCounts, setDocCounts] = useState<Record<string, number>>({});
   
   // Rename Modal State
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
@@ -142,12 +147,28 @@ export default function Gallery() {
     }
   };
 
+  const fetchDocCounts = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE}/documents/metrics/counts`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDocCounts(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch doc counts:', err);
+    }
+  };
+
   useEffect(() => {
     if (filterType === 'trash') {
       fetchTrash();
     } else {
       fetchMedia();
       fetchTrashCount(); // keep trash count fresh when browsing active media
+      fetchDocCounts();
     }
   }, [token, filterType]);
 
@@ -566,14 +587,18 @@ export default function Gallery() {
       {/* ── Categories Grid ──────────────────────── */}
       <div className="grid grid-cols-2 gap-3 mb-8">
         {[
-          { icon: IdCard, color: 'bg-amber-100 text-amber-500', name: 'Government IDs', count: 6 },
-          { icon: GraduationCap, color: 'bg-emerald-100 text-emerald-500', name: 'Education', count: 5 },
-          { icon: SquareActivity, color: 'bg-rose-100 text-rose-500', name: 'Medical', count: 4 },
-          { icon: Building2, color: 'bg-blue-100 text-blue-500', name: 'Banking', count: 3 },
-          { icon: Home, color: 'bg-purple-100 text-purple-500', name: 'Property', count: 2 },
-          { icon: Folder, color: 'bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300', name: 'Others', count: 4 },
+          { icon: IdCard, color: 'bg-amber-100 text-amber-500', name: 'Government IDs', count: docCounts['Government IDs'] || 0, path: '/vault/government-ids' },
+          { icon: GraduationCap, color: 'bg-emerald-100 text-emerald-500', name: 'Education', count: docCounts['Education'] || 0, path: '/vault/education' },
+          { icon: SquareActivity, color: 'bg-rose-100 text-rose-500', name: 'Medical', count: docCounts['Medical'] || 0, path: '/vault/medical' },
+          { icon: Building2, color: 'bg-blue-100 text-blue-500', name: 'Banking', count: docCounts['Banking'] || 0, path: '/vault/banking' },
+          { icon: Home, color: 'bg-purple-100 text-purple-500', name: 'Property', count: docCounts['Property'] || 0, path: '/vault/property' },
+          { icon: Folder, color: 'bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300', name: 'Others', count: docCounts['Others'] || 0, path: '/vault/others' },
         ].map((cat, i) => (
-          <div key={i} className="bg-white dark:bg-neutral-800 rounded-2xl p-4 shadow-sm border border-neutral-100 dark:border-neutral-700 flex items-center justify-between cursor-pointer hover:shadow-md transition-shadow active:scale-95 group">
+          <div 
+            key={i} 
+            onClick={() => navigate(cat.path)}
+            className="bg-white dark:bg-neutral-800 rounded-2xl p-4 shadow-sm border border-neutral-100 dark:border-neutral-700 flex items-center justify-between cursor-pointer hover:shadow-md transition-shadow active:scale-95 group"
+          >
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${cat.color}`}>
                 <cat.icon size={20} />

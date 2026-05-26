@@ -8,7 +8,6 @@ const handleResponse = async (response: Response) => {
   try {
     data = text ? JSON.parse(text) : {};
   } catch (err) {
-    // If not JSON, use the raw text if available, or status text
     data = { message: text || response.statusText || 'Unknown server error' };
   }
 
@@ -18,33 +17,27 @@ const handleResponse = async (response: Response) => {
   return data;
 };
 
-export const loginWithFirebaseToken = async (idToken: string) => {
-  const response = await fetch(`${API_URL}/auth/firebase`, {
-    method: 'POST',
+export const getCurrentUser = async () => {
+  const response = await fetch(`${API_URL}/auth/me`, {
+    method: 'GET',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ token: idToken }),
+    // Important if cookies are on different domain/port, though Vite proxy might handle it
+    // credentials: 'omit' // or 'include' based on setup
   });
 
   return handleResponse(response);
 };
 
-export const linkGoogleAccount = async (idToken: string, jwtToken: string) => {
-  const response = await fetch(`${API_URL}/auth/link-google`, {
+export const logoutUser = async () => {
+  const response = await fetch(`${API_URL}/auth/logout`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${jwtToken}`
     },
-    body: JSON.stringify({ token: idToken }),
   });
 
-  return handleResponse(response);
-};
-
-export const logout = () => {
-  localStorage.removeItem('token');
   localStorage.removeItem('user');
+  return handleResponse(response);
 };
-

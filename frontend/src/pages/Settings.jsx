@@ -9,8 +9,6 @@ import {
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { syncNotesToGoogleDrive, fetchNotesFromGoogleDrive } from '../services/driveService';
-import { auth } from '../config/firebase';
-import PasswordModal from '../modals/PasswordModal';
 
 /* ─── Toggle ─────────────────────────────────────────────────────── */
 function Toggle({ checked, onChange }) {
@@ -129,7 +127,7 @@ export default function Settings() {
   const [isFetching, setIsFetching]     = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
-  const hasPassword = auth.currentUser?.providerData?.some(p => p.providerId === 'password');
+
   const notesKey    = user ? `keep-in-mind-notes-${user._id}` : 'keep-in-mind-notes-guest';
   const syncTimeKey = user ? `keep-in-mind-last-sync-${user._id}` : 'keep-in-mind-last-sync-guest';
   const [lastSynced, setLastSynced] = useState(() => localStorage.getItem(syncTimeKey) || null);
@@ -266,11 +264,6 @@ export default function Settings() {
 
       </div>
 
-      <PasswordModal
-        isOpen={isPasswordModalOpen}
-        onClose={() => setIsPasswordModalOpen(false)}
-        hasPassword={hasPassword}
-      />
     </div>
   );
 }

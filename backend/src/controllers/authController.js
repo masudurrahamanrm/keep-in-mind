@@ -1,140 +1,72 @@
-const admin = require('../config/firebaseAdmin');
 const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
-const jwt = require('jsonwebtoken');
 const logActivity = require('../utils/logger');
 
-// @desc    Auth user with Firebase ID token (Google or Email/Password)
-// @route   POST /api/auth/firebase
+// @desc    Callback for Google OAuth
+// @route   GET /api/auth/google/callback
 // @access  Public
-const authFirebase = async (req, res) => {
-  const { token } = req.body;
-
-  console.log('--- Firebase Auth Request ---');
-
+const googleCallback = async (req, res) => {
   try {
-    // Verify the Firebase ID token
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    const { uid, email, name, picture, firebase } = decodedToken;
-    const provider = firebase?.sign_in_provider === 'password' ? 'local' : 'google';
+    const user = req.user; // user from passport
 
-    console.log(`Token verified for: ${email} (UID: ${uid}, Provider: ${provider})`);
-
-    // Check if user exists by Firebase UID
-    let user = await User.findOne({ googleId: uid });
-
-    // If not found by UID, check by Email (for users migrating from old Firebase projects)
-    if (!user && email) {
-      user = await User.findOne({ email });
-      if (user) {
-        console.log(`User found by email. Updating UID for: ${email}`);
-        user.googleId = uid;
-        // Also update avatar if missing
-        if (!user.avatar && picture) user.avatar = picture;
-        await user.save();
-      }
-    }
-
-    if (!user) {
-      console.log(`Creating new user record for: ${email}`);
-      user = await User.create({
-        googleId: uid, // We use googleId field to store the universal Firebase UID
-        email,
-        name: name || email.split('@')[0],
-        avatar: picture || '',
-        authProvider: provider,
-        isVerified: true 
-      });
-      
-      await logActivity({
-        title: "New User Registration",
-        actor: email,
-        type: "success",
-        details: `Account created via ${provider === 'google' ? 'Google OAuth' : 'Email/Password'}`
-      });
-    } else {
-      await logActivity({
-        title: "User Login",
-        actor: email,
-        type: "neutral",
-        details: `Session started via ${provider === 'google' ? 'Google OAuth' : 'Email/Password'}`
-      });
-    }
-
-
-    // ── 2FA Gate ──────────────────────────────────────────────
-    if (user.twoFactorEnabled && user.twoFactorSecret) {
-      // Issue a short-lived "pending" token — not a real session yet
-      const pendingToken = jwt.sign(
-        { id: user._id, pending2FA: true },
-        process.env.JWT_SECRET,
-        { expiresIn: '10m' }
-      );
-
-      return res.json({
-        twoFactorRequired: true,
-        pendingToken,
-        // Send minimal info so the UI can show the user's name
-        user: { name: user.name, email: user.email, avatar: user.avatar },
-      });
-    }
-
-    // No 2FA → grant full session immediately
-    res.json({
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
-        authProvider: user.authProvider,
-        googleId: user.googleId
-      },
-      token: generateToken(user._id),
+    await logActivity({
+      title: "User Login",
+      actor: user.email,
+      type: "success",
+      details: "Session started via Google OAuth"
     });
+
+    const token = generateToken(user._id);
+
+    // Set cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax', // Since frontend and backend might be on different ports in dev, lax is safer
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+    });
+
+    const frontendUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+    const userPayload = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar
+    };
+    const gToken = user.googleAccessToken || '';
+    res.redirect(`${frontendUrl}/?token=${token}&user=${encodeURIComponent(JSON.stringify(userPayload))}&googleToken=${encodeURIComponent(gToken)}`);
   } catch (error) {
-    console.error('Firebase Verification Error:', error.message);
-    res.status(401).json({ message: `Authentication failed: ${error.message}` });
+    console.error('Google Callback Error:', error.message);
+    res.status(500).send('Authentication failed');
   }
 };
 
-// @desc    Link Google account to existing user
-// @route   POST /api/auth/link-google
+// @desc    Get current logged in user
+// @route   GET /api/auth/me
 // @access  Private
-const linkGoogle = async (req, res) => {
-  const { token } = req.body;
-
+const getMe = async (req, res) => {
   try {
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    const { uid, picture } = decodedToken;
-
-    // Check if this googleId is already linked to ANOTHER user
-    const existingGoogleUser = await User.findOne({ googleId: uid });
-    if (existingGoogleUser && existingGoogleUser._id.toString() !== req.user._id.toString()) {
-      return res.status(400).json({ message: 'This Google account is already linked to another profile.' });
-    }
-
-    const user = await User.findById(req.user._id);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
-    }
-
-    user.googleId = uid;
-    if (!user.avatar && picture) user.avatar = picture;
-    await user.save();
-
     res.json({
-      message: 'Google account linked successfully.',
       user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
+        _id: req.user._id,
+        name: req.user.name,
+        email: req.user.email,
+        avatar: req.user.avatar,
+        authProvider: req.user.authProvider,
+        googleId: req.user.googleId
       }
     });
   } catch (error) {
-    console.error('Link Google Error:', error.message);
-    res.status(401).json({ message: `Linking failed: ${error.message}` });
+    res.status(500).json({ message: error.message });
   }
+};
+
+// @desc    Logout user
+// @route   POST /api/auth/logout
+// @access  Private
+const logout = async (req, res) => {
+  res.clearCookie('token');
+  res.json({ message: 'Logged out successfully' });
 };
 
 // @desc    Update user "last seen" timestamp
@@ -158,4 +90,4 @@ const ping = async (req, res) => {
   }
 };
 
-module.exports = { authFirebase, linkGoogle, ping };
+module.exports = { googleCallback, getMe, logout, ping };

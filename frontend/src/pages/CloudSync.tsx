@@ -8,9 +8,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { syncNotesToGoogleDrive, fetchNotesFromGoogleDrive } from '../services/driveService';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth, googleProvider } from '../config/firebase';
-import { linkGoogleAccount } from '../services/authService';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
@@ -69,22 +66,9 @@ export default function CloudSync() {
   };
 
   const handleConnect = async () => {
-    setIsConnecting(true);
-    setSyncResult(null);
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      const gToken = credential?.accessToken;
-      if (!gToken) throw new Error('Failed to obtain Google access token.');
-      const idToken = await result.user.getIdToken();
-      const data = await linkGoogleAccount(idToken, token!);
-      updateGoogleToken(gToken, data.user);
-      setSyncResult({ type: 'success', message: 'Google Drive connected successfully!' });
-    } catch (err: any) {
-      setSyncResult({ type: 'error', message: err.message || 'Connection failed' });
-    } finally {
-      setIsConnecting(false);
-    }
+    // Redirect to backend OAuth to get updated scopes including Drive
+    // If backend is configured, it could handle the prompt
+    window.location.href = `${API_BASE}/auth/google`;
   };
 
   const handleDisconnect = () => {

@@ -14,14 +14,16 @@ const API_BASE = import.meta.env.VITE_API_URL || '/api';
 interface MediaViewerProps {
   media: any;
   onClose: () => void;
-  onNext: () => void;
-  onPrev: () => void;
-  onRename: (id: string, currentName: string) => void;
+  onNext?: () => void;
+  onPrev?: () => void;
+  onRename?: (id: string, currentName: string) => void;
+  streamEndpoint?: string;
 }
 
-export default function MediaViewer({ media, onClose, onNext, onPrev, onRename }: MediaViewerProps) {
-  const { googleAccessToken } = useAuth();
-  const isVideo = media.fileType.startsWith('video/');
+export default function MediaViewer({ media, onClose, onNext, onPrev, onRename, streamEndpoint = '/gallery/stream' }: MediaViewerProps) {
+  const { googleAccessToken, token } = useAuth();
+  const isVideo = media.fileType?.startsWith('video/') || media.fileName?.toLowerCase().match(/\.(mp4|webm|ogg|mov)$/);
+  const isPdf = media.fileType?.includes('pdf') || media.fileName?.toLowerCase().endsWith('.pdf');
   
   // Video States
   const [isPlaying, setIsPlaying] = useState(true);
@@ -48,19 +50,19 @@ export default function MediaViewer({ media, onClose, onNext, onPrev, onRename }
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const isValidToken = !!(googleAccessToken && googleAccessToken !== 'undefined' && googleAccessToken !== 'null');
-  const streamBase = isValidToken
-    ? `${API_BASE}/gallery/stream/${media.fileId}?token=${googleAccessToken}`
-    : null;
-  const directLink = streamBase ?? media.fileUrl;
-  const downloadLink = streamBase ? `${streamBase}&download=true` : media.fileUrl;
+  const isValidToken = !!(token && token !== 'undefined' && token !== 'null');
+  const mediaSrc = media.fileId && isValidToken
+    ? `${API_BASE}${streamEndpoint}/${media.fileId}?token=${token}`
+    : media.fileUrl;
+  const directLink = mediaSrc;
+  const downloadLink = mediaSrc.includes('?') ? `${mediaSrc}&download=true` : `${mediaSrc}?download=true`;
 
   // Idle Detection for Auto-hide Controls
   const resetIdleTimer = useCallback(() => {
     setShowControls(true);
     if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
     controlsTimeoutRef.current = setTimeout(() => {
-      if (isPlaying) setShowControls(false);
+      if (isPlaying && !isPdf) setShowControls(false);
     }, 2500);
   }, [isPlaying]);
 
@@ -282,7 +284,7 @@ export default function MediaViewer({ media, onClose, onNext, onPrev, onRename }
             if (info.offset.x < -threshold) onNext();
             else if (info.offset.x > threshold) onPrev();
           }}
-          className={`relative flex items-center justify-center transition-all duration-500 ${isFullscreen ? 'w-screen h-screen' : 'max-w-full max-h-full'}`}
+          className={`relative flex items-center justify-center transition-all duration-500 ${isFullscreen || isPdf ? 'w-screen h-screen' : 'max-w-full max-h-full'}`}
         >
           {isVideo ? (
             <div className={`relative group/video overflow-hidden transition-all duration-500 ${isFullscreen ? 'w-screen h-screen rounded-none shadow-none border-none' : 'shadow-[0_30px_100px_rgba(0,0,0,0.8)] border border-white/5'}`}>
@@ -320,6 +322,14 @@ export default function MediaViewer({ media, onClose, onNext, onPrev, onRename }
                   </motion.div>
                 )}
               </AnimatePresence>
+            </div>
+          ) : isPdf ? (
+            <div className="absolute inset-0 z-40 w-full h-full bg-white transition-all duration-500 pt-[72px]" onClick={e => e.stopPropagation()}>
+              <iframe
+                src={directLink}
+                title={media.fileName}
+                className="w-full h-full border-0"
+              />
             </div>
           ) : (
             <div 
@@ -464,7 +474,7 @@ export default function MediaViewer({ media, onClose, onNext, onPrev, onRename }
         )}
 
         {/* Image Controls Overlay (Moved Outside for better mobile positioning) */}
-        {!isVideo && (
+        {!isVideo && !isPdf && (
           <AnimatePresence>
             {showControls && (
               <motion.div 

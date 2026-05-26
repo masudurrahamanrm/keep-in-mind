@@ -2,9 +2,6 @@ import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { CloudCog, RefreshCw, Database, HardDrive, Trash2, FileText } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth, googleProvider } from '../config/firebase';
-import { linkGoogleAccount } from '../services/authService';
 import { AlertCircle, LogIn, CheckCircle } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
@@ -110,21 +107,7 @@ export default function DriveStorageCard() {
   }, [googleAccessToken, token]);
 
   const handleReconnect = async () => {
-    setIsRefreshingToken(true);
-    setError('');
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      const googleToken = credential?.accessToken;
-      if (!googleToken) throw new Error('Failed to obtain Google access token.');
-      const idToken = await result.user.getIdToken();
-      const data = await linkGoogleAccount(idToken, token!);
-      updateGoogleToken(googleToken, data.user);
-    } catch (err: any) {
-      setError(`Connection failed: ${err.message}`);
-    } finally {
-      setIsRefreshingToken(false);
-    }
+    window.location.href = `${API_BASE}/auth/google`;
   };
 
   const isConnected = !!googleAccessToken && !error;

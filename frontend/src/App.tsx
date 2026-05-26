@@ -5,6 +5,8 @@
 
 import React, { ReactNode, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Layout from './components/Layout';
 import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -29,6 +31,7 @@ const Notes = lazy(() => import('./pages/Notes'));
 const Gallery = lazy(() => import('./pages/Gallery'));
 const Account = lazy(() => import('./pages/Account'));
 const Labels = lazy(() => import('./pages/Labels'));
+const VaultCategory = lazy(() => import('./pages/VaultCategory'));
 const Archive = lazy(() => import('./pages/Archive'));
 const Trash = lazy(() => import('./pages/Trash'));
 const Explore = lazy(() => import('./pages/Explore'));
@@ -83,6 +86,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Heartbeat />
+      <ToastContainer theme="dark" position="bottom-center" />
       <Routes>
 
         {/* Public: login page — redirects to /notes if already signed in */}
@@ -108,6 +112,7 @@ export default function App() {
           <Route path="notes"    element={<Suspense fallback={<PageLoader />}><Notes /></Suspense>}   />
           <Route path="gallery"  element={<Suspense fallback={<PageLoader />}><Gallery /></Suspense>} />
           <Route path="labels"   element={<Suspense fallback={<PageLoader />}><Labels /></Suspense>}  />
+          <Route path="vault/:categoryId" element={<Suspense fallback={<PageLoader />}><VaultCategory /></Suspense>} />
           <Route path="archive"  element={<Suspense fallback={<PageLoader />}><Archive /></Suspense>} />
           <Route path="trash"    element={<Suspense fallback={<PageLoader />}><Trash /></Suspense>} />
           <Route path="account"  element={<Suspense fallback={<PageLoader />}><Account /></Suspense>} />

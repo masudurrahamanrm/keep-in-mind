@@ -10,6 +10,11 @@ const adminRoutes = require('./routes/adminRoutes');
 const feedRoutes = require('./routes/feedRoutes');
 
 
+const cookieParser = require('cookie-parser');
+const session = require('express-session');
+const passport = require('passport');
+require('./config/passport'); // Initialize passport config
+
 dotenv.config();
 
 const app = express();
@@ -28,7 +33,20 @@ app.get('/api/test', (req, res) => {
 
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ limit: '100mb', extended: true }));
+app.use(cookieParser());
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'keyboard cat',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: process.env.NODE_ENV === 'production' }
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
 app.use('/api/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
+const documentRoutes = require('./routes/documentRoutes');
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -37,6 +55,7 @@ app.use('/api/gallery', galleryRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/feed', feedRoutes);
+app.use('/api/documents', documentRoutes);
 
 
 // Health check

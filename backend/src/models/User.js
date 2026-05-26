@@ -48,6 +48,54 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  googleAccessToken: {
+    type: String,
+    default: null
+  },
+  googleRefreshToken: {
+    type: String,
+    default: null
+  },
+  rootFolderId: {
+    type: String,
+    default: null
+  },
+  governmentFolderId: {
+    type: String,
+    default: null
+  },
+  educationFolderId: {
+    type: String,
+    default: null
+  },
+  medicalFolderId: {
+    type: String,
+    default: null
+  },
+  bankingFolderId: {
+    type: String,
+    default: null
+  },
+  propertyFolderId: {
+    type: String,
+    default: null
+  },
+  othersFolderId: {
+    type: String,
+    default: null
+  },
+  encryptedFolderId: {
+    type: String,
+    default: null
+  },
+  backupsFolderId: {
+    type: String,
+    default: null
+  },
+  notesFolderId: {
+    type: String,
+    default: null
+  },
   lastActive: {
     type: Date,
     default: Date.now

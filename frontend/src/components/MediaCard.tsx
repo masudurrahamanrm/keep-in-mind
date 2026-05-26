@@ -19,6 +19,7 @@ interface MediaCardProps {
   isTrashMode?: boolean;
   onRestore?: (id: string) => void | Promise<void>;
   onPermanentDelete?: (id: string) => void | Promise<void>;
+  streamEndpoint?: string;
 }
 
 export default function MediaCard({ 
@@ -32,7 +33,8 @@ export default function MediaCard({
   onPermanentDelete,
   isSelected = false,
   isSelectionMode = false,
-  onToggleSelect
+  onToggleSelect,
+  streamEndpoint = '/gallery/stream'
 }: MediaCardProps) {
   const { googleAccessToken } = useAuth();
   const isVideo = media.fileType.startsWith('video/');
@@ -60,9 +62,9 @@ export default function MediaCard({
   };
   
   const isValidToken = googleAccessToken && googleAccessToken !== 'undefined' && googleAccessToken !== 'null';
-  const thumbnailSrc = isValidToken 
-    ? `${API_BASE}/gallery/stream/${media.fileId}?token=${googleAccessToken}&thumbnail=true`
-    : null;
+  const thumbnailUrl = media.thumbnailUrl || (media.fileId && isValidToken 
+    ? `${API_BASE}${streamEndpoint}/${media.fileId}?token=${googleAccessToken}&thumbnail=true`
+    : null);
   const [thumbnailError, setThumbnailError] = useState(false);
   
   const formatSize = (bytes: number) => {
@@ -99,9 +101,9 @@ export default function MediaCard({
     >
       {/* Thumbnail Layer */}
       <div className="absolute inset-0">
-        {thumbnailSrc && !thumbnailError ? (
+        {thumbnailUrl && !thumbnailError ? (
           <img
-            src={thumbnailSrc}
+            src={thumbnailUrl}
             alt={media.fileName}
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
             onError={() => setThumbnailError(true)}

@@ -44,6 +44,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check URL for token and user first (returned from Google Auth redirect)
+    const params = new URLSearchParams(window.location.search);
+    const urlToken = params.get('token');
+    const urlUserStr = params.get('user');
+    const urlGToken = params.get('googleToken');
+
+    if (urlToken && urlUserStr) {
+      try {
+        const urlUser = JSON.parse(urlUserStr);
+        setToken(urlToken);
+        setUser(urlUser);
+        localStorage.setItem('token', urlToken);
+        localStorage.setItem('user', urlUserStr);
+
+        if (urlGToken && urlGToken !== 'undefined' && urlGToken !== 'null') {
+          setGoogleAccessToken(urlGToken);
+          localStorage.setItem('googleToken', urlGToken);
+        } else {
+          setGoogleAccessToken(null);
+          localStorage.removeItem('googleToken');
+        }
+        
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        setLoading(false);
+        return;
+      } catch(err) {
+        console.error('Failed to parse URL user data:', err);
+      }
+    }
+
     // Load persisted auth state on mount
     const savedToken = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');

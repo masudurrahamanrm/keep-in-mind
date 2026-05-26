@@ -3,10 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Camera, Save, AlertCircle, CheckCircle, Globe } from 'lucide-react';
 import { cn } from '../Sidebar';
 import { Button } from '../settings/SettingsUI';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth, googleProvider } from '../../config/firebase';
 import { useAuth } from '../../context/AuthContext';
-import { linkGoogleAccount } from '../../services/authService';
 
 export default function EditProfileModal({ profile, onClose, onSave }) {
   const [formData, setFormData] = useState({ ...profile });
@@ -36,29 +33,8 @@ export default function EditProfileModal({ profile, onClose, onSave }) {
   const [isLinking, setIsLinking] = useState(false);
 
   const handleConnectGoogle = async () => {
-    setIsLinking(true);
-    setError('');
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      const googleToken = credential?.accessToken;
-      if (!googleToken) throw new Error('Failed to obtain Google access token.');
-
-      const idToken = await result.user.getIdToken();
-      const data = await linkGoogleAccount(idToken, jwtToken);
-      
-      updateGoogleToken(googleToken, data.user);
-      
-      if (data.user.avatar && !formData.avatar) {
-        setFormData(prev => ({ ...prev, avatar: data.user.avatar }));
-        setPreviewUrl(data.user.avatar);
-      }
-    } catch (err) {
-      console.error(err);
-      setError(err.message || 'Failed to connect Google account.');
-    } finally {
-      setIsLinking(false);
-    }
+    // Redirect to backend OAuth to get updated scopes including Drive
+    window.location.href = `/api/auth/google`;
   };
 
   const handleSubmit = (e) => {
