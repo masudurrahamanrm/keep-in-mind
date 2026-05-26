@@ -26,7 +26,7 @@ export default function Layout() {
   }, [isMobileMenuOpen]);
 
   return (
-    <div className="flex h-screen bg-surface bg-mesh overflow-hidden">
+    <div className="flex h-screen bg-white dark:bg-[#111318] overflow-hidden">
       {/* Mobile Backdrop */}
       {isMobileMenuOpen && (
         <div
