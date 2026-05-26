@@ -467,7 +467,7 @@ export default function Notes() {
                           } else if (isYesterday(date)) {
                             return 'Yesterday';
                           } else {
-                            return format(date, 'MMM d, yyyy');
+                            return format(date, 'MMM d');
                           }
                         } catch {
                           return note.date;
