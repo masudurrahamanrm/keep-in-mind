@@ -221,6 +221,16 @@ export default function TopBar({ searchQuery, setSearchQuery, onToggleSidebar, o
           </button>
         )}
 
+        {/* Add + button on Tasks and Reminders pages */}
+        {(currentPath === '/tasks' || currentPath === '/reminders') && (
+          <button
+            onClick={() => navigate(currentPath === '/tasks' ? '/tasks/new' : '/reminders/new')}
+            className="p-2 bg-[#FFC107] hover:bg-[#F5B000] text-white rounded-full transition-all min-w-[36px] min-h-[36px] flex items-center justify-center shadow-md shadow-[#FFC107]/30 active:scale-95"
+          >
+            <Plus size={20} strokeWidth={3} />
+          </button>
+        )}
+
         {/* Notifications */}
         <div className="relative hidden sm:block">
           <button

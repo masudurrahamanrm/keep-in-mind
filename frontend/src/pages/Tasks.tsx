@@ -205,24 +205,6 @@ export default function Tasks() {
         </div>
       </div>
 
-      {/* ADD TASK INPUT */}
-      <form onSubmit={handleAddTask} className="mb-6 relative">
-        <input
-          type="text"
-          value={newTask}
-          onChange={(e) => setNewTask(e.target.value)}
-          placeholder="Add a new task..."
-          className="w-full bg-white dark:bg-[#1A1C20] border-none rounded-[20px] py-4 pl-5 pr-14 shadow-sm text-gray-800 dark:text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-[#FFC107] outline-none"
-        />
-        <button
-          type="submit"
-          disabled={!newTask.trim()}
-          className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-[#FFC107] text-white rounded-[14px] flex items-center justify-center hover:bg-[#F5B000] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Plus size={20} strokeWidth={3} />
-        </button>
-      </form>
-
       {/* TASKS LIST */}
       <div className="flex flex-col gap-3">
         {loading ? (

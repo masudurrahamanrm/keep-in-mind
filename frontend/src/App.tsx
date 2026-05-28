@@ -43,6 +43,7 @@ const Editor  = lazy(() => import('./pages/Editor'));
 const Tasks   = lazy(() => import('./pages/Tasks'));
 const Reminders = lazy(() => import('./pages/Reminders'));
 const AddReminder = lazy(() => import('./pages/AddReminder'));
+const AddTask = lazy(() => import('./pages/AddTask'));
 const CloudSync = lazy(() => import('./pages/CloudSync'));
 
 // ── Guard: redirect to /notes if already signed in ─────────
@@ -118,6 +119,7 @@ export default function App() {
           <Route path="trash"    element={<Suspense fallback={<PageLoader />}><Trash /></Suspense>} />
           <Route path="account"  element={<Suspense fallback={<PageLoader />}><Account /></Suspense>} />
           <Route path="tasks"    element={<Suspense fallback={<PageLoader />}><Tasks /></Suspense>} />
+          <Route path="tasks/new" element={<Suspense fallback={<PageLoader />}><AddTask /></Suspense>} />
           <Route path="reminders" element={<Suspense fallback={<PageLoader />}><Reminders /></Suspense>} />
           <Route path="reminders/new" element={<Suspense fallback={<PageLoader />}><AddReminder /></Suspense>} />
           <Route path="explore/:id" element={<Suspense fallback={<PageLoader />}><ExplorePost /></Suspense>} />
