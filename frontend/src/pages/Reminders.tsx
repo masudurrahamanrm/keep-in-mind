@@ -16,7 +16,8 @@ export type ReminderRepeat = 'Does not repeat' | 'Daily' | 'Weekly' | 'Monthly';
 export type FilterTab = 'All' | 'Upcoming' | 'Completed' | 'Snoozed';
 
 export interface Reminder {
-  id: number;
+  id?: number | string;
+  _id?: string;
   text: string;
   time: string;
   category: ReminderCategory;
@@ -25,6 +26,8 @@ export interface Reminder {
   completed: boolean;
   snoozedUntil?: string;
 }
+
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const getCategoryIcon = (category: ReminderCategory, isSnoozed: boolean) => {
   if (isSnoozed) return <Moon size={20} className="text-purple-500" />;
@@ -47,57 +50,116 @@ const getCategoryColor = (category: ReminderCategory, isSnoozed: boolean) => {
 };
 
 export default function Reminders() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const navigate = useNavigate();
   const storageKey = user ? `keep-in-mind-reminders-v2-${user._id}` : 'keep-in-mind-reminders-v2-guest';
 
-  const [reminders, setReminders] = useState<Reminder[]>(() => {
-    const saved = localStorage.getItem(storageKey);
-    return saved ? JSON.parse(saved) : [
-      { id: 1, text: 'Doctor appointment', time: new Date(new Date().setHours(18, 40)).toISOString(), category: 'Health', priority: 'High Priority', repeat: 'Does not repeat', completed: false },
-      { id: 2, text: 'Call mom', time: new Date(new Date().setHours(19, 40)).toISOString(), category: 'Personal', priority: 'Normal', repeat: 'Does not repeat', completed: false },
-      { id: 3, text: 'Take medication', time: new Date(new Date().getTime() + 86400000).toISOString(), category: 'Health', priority: 'High Priority', repeat: 'Daily', completed: false },
-      { id: 4, text: 'Study for exam', time: new Date(new Date().getTime() + 86400000).toISOString(), category: 'Education', priority: 'Normal', repeat: 'Does not repeat', completed: false },
-      { id: 5, text: 'Morning workout', time: new Date(new Date().setHours(7, 0)).toISOString(), category: 'Health', priority: 'Normal', repeat: 'Daily', completed: false, snoozedUntil: new Date(new Date().setHours(9, 0)).toISOString() },
-    ];
-  });
-  
-  const [newReminderText, setNewReminderText] = useState('');
-  const [newReminderTime, setNewReminderTime] = useState('');
+  const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<FilterTab>('All');
 
+  // Load reminders
   useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(reminders));
-  }, [reminders, storageKey]);
+    const loadReminders = async () => {
+      if (token) {
+        setLoading(true);
+        try {
+          const res = await fetch(`${API_BASE}/reminders`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setReminders(data);
+          } else {
+            console.error('Failed to fetch reminders from server');
+          }
+        } catch (error) {
+          console.error('Error fetching reminders:', error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        // Guest mode fallback
+        const saved = localStorage.getItem(storageKey);
+        setReminders(saved ? JSON.parse(saved) : []);
+      }
+    };
 
-  const handleAddReminder = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!newReminderText.trim() || !newReminderTime) return;
-    
-    setReminders([{
-      id: Date.now(),
-      text: newReminderText.trim(),
-      time: new Date(newReminderTime).toISOString(),
-      category: 'Other',
-      priority: 'Normal',
-      repeat: 'Does not repeat',
-      completed: false
-    }, ...reminders].sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime()));
-    
-    setNewReminderText('');
-    setNewReminderTime('');
-  };
+    loadReminders();
+  }, [token, storageKey]);
 
-  const toggleComplete = (id: number) => {
-    setReminders(reminders.map(r => r.id === id ? { ...r, completed: !r.completed } : r));
+  // Sync to localStorage only in guest mode
+  useEffect(() => {
+    if (!token) {
+      localStorage.setItem(storageKey, JSON.stringify(reminders));
+    }
+  }, [reminders, token, storageKey]);
+
+  const toggleComplete = async (id: string | number) => {
+    const reminder = reminders.find(r => (r._id || r.id) === id);
+    if (!reminder) return;
+
+    if (token) {
+      try {
+        const res = await fetch(`${API_BASE}/reminders/${id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ completed: !reminder.completed })
+        });
+        if (res.ok) {
+          const updated = await res.json();
+          setReminders(reminders.map(r => ((r._id || r.id) === id ? updated : r)));
+        }
+      } catch (error) {
+        console.error('Error toggling reminder:', error);
+      }
+    } else {
+      setReminders(reminders.map(r => ((r.id || r._id) === id ? { ...r, completed: !r.completed } : r)));
+    }
   };
   
-  const deleteReminder = (id: number) => {
-    setReminders(reminders.filter(r => r.id !== id));
+  const deleteReminder = async (id: string | number) => {
+    if (token) {
+      try {
+        const res = await fetch(`${API_BASE}/reminders/${id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          setReminders(reminders.filter(r => (r._id || r.id) !== id));
+        }
+      } catch (error) {
+        console.error('Error deleting reminder:', error);
+      }
+    } else {
+      setReminders(reminders.filter(r => (r.id || r._id) !== id));
+    }
   };
 
-  const undoSnooze = (id: number) => {
-    setReminders(reminders.map(r => r.id === id ? { ...r, snoozedUntil: undefined } : r));
+  const undoSnooze = async (id: string | number) => {
+    if (token) {
+      try {
+        const res = await fetch(`${API_BASE}/reminders/${id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ snoozedUntil: null })
+        });
+        if (res.ok) {
+          const updated = await res.json();
+          setReminders(reminders.map(r => ((r._id || r.id) === id ? updated : r)));
+        }
+      } catch (error) {
+        console.error('Error un-snoozing reminder:', error);
+      }
+    } else {
+      setReminders(reminders.map(r => ((r.id || r._id) === id ? { ...r, snoozedUntil: undefined } : r)));
+    }
   };
 
   // Stats
@@ -223,7 +285,7 @@ export default function Reminders() {
                 <AnimatePresence>
                   {list.map(reminder => (
                     <motion.div
-                      key={reminder.id}
+                      key={reminder._id || reminder.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
@@ -273,14 +335,14 @@ export default function Reminders() {
                       <div className="flex items-center gap-1">
                         {reminder.snoozedUntil ? (
                           <button 
-                            onClick={() => undoSnooze(reminder.id)}
+                            onClick={() => undoSnooze(reminder._id || reminder.id!)}
                             className="px-3 py-1.5 bg-purple-50 dark:bg-purple-900/20 text-purple-600 text-xs font-bold rounded-full hover:bg-purple-100 transition-colors"
                           >
                             Undo
                           </button>
                         ) : (
                           <button 
-                            onClick={() => toggleComplete(reminder.id)}
+                            onClick={() => toggleComplete(reminder._id || reminder.id!)}
                             className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-green-500 rounded-full transition-colors"
                             title="Mark as completed"
                           >
@@ -288,7 +350,7 @@ export default function Reminders() {
                           </button>
                         )}
                         <button 
-                          onClick={() => deleteReminder(reminder.id)}
+                          onClick={() => deleteReminder(reminder._id || reminder.id!)}
                           className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 rounded-full transition-colors"
                           title="Delete reminder"
                         >

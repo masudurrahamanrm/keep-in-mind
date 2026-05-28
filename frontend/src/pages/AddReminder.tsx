@@ -5,10 +5,11 @@ import { format, parseISO } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
 import CustomDatePicker from '../components/CustomDatePicker';
 import CustomDropdown from '../components/CustomDropdown';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 export default function AddReminder() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   
   const [newReminderText, setNewReminderText] = useState('');
   const [newReminderTime, setNewReminderTime] = useState('');
@@ -16,30 +17,57 @@ export default function AddReminder() {
   const [repeat, setRepeat] = useState('Does not repeat');
   const [priority, setPriority] = useState('Normal');
   const [category, setCategory] = useState('Personal');
+  const [saving, setSaving] = useState(false);
 
-  const handleAddReminder = (e?: React.FormEvent) => {
+  const handleAddReminder = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!newReminderText.trim() || !newReminderTime) return;
-    
-    const storageKey = user ? `keep-in-mind-reminders-v2-${user._id}` : 'keep-in-mind-reminders-v2-guest';
-    const saved = localStorage.getItem(storageKey);
-    const reminders = saved ? JSON.parse(saved) : [];
-    
-    const newReminder = {
-      id: Date.now(),
-      text: newReminderText.trim(),
-      time: new Date(newReminderTime).toISOString(),
-      category: category,
-      priority: priority,
-      repeat: repeat,
-      completed: false
-    };
 
-    reminders.push(newReminder);
-    reminders.sort((a: any, b: any) => new Date(a.time).getTime() - new Date(b.time).getTime());
-    localStorage.setItem(storageKey, JSON.stringify(reminders));
-    
-    navigate('/reminders');
+    setSaving(true);
+
+    if (token) {
+      try {
+        const res = await fetch(`${API_BASE}/reminders`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            text: newReminderText.trim(),
+            time: new Date(newReminderTime).toISOString(),
+            category,
+            priority,
+            repeat
+          })
+        });
+        if (res.ok) {
+          navigate('/reminders');
+        }
+      } catch (error) {
+        console.error('Error adding reminder:', error);
+      } finally {
+        setSaving(false);
+      }
+    } else {
+      // Guest mode fallback
+      const storageKey = user ? `keep-in-mind-reminders-v2-${user._id}` : 'keep-in-mind-reminders-v2-guest';
+      const saved = localStorage.getItem(storageKey);
+      const reminders = saved ? JSON.parse(saved) : [];
+      
+      reminders.push({
+        id: Date.now(),
+        text: newReminderText.trim(),
+        time: new Date(newReminderTime).toISOString(),
+        category,
+        priority,
+        repeat,
+        completed: false
+      });
+      reminders.sort((a: any, b: any) => new Date(a.time).getTime() - new Date(b.time).getTime());
+      localStorage.setItem(storageKey, JSON.stringify(reminders));
+      navigate('/reminders');
+    }
   };
 
   return (
@@ -132,10 +160,10 @@ export default function AddReminder() {
           <div className="pt-8">
             <button 
               onClick={handleAddReminder}
-              disabled={!newReminderText.trim() || !newReminderTime}
+              disabled={!newReminderText.trim() || !newReminderTime || saving}
               className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-[#FFC107] to-[#FF9800] text-white rounded-2xl font-bold text-lg hover:from-[#F5B000] hover:to-[#F57C00] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#FFC107]/30 transform active:scale-[0.98]"
             >
-              <Plus size={20} strokeWidth={3} /> Save Reminder
+              <Plus size={20} strokeWidth={3} /> {saving ? 'Saving...' : 'Save Reminder'}
             </button>
           </div>
         </div>

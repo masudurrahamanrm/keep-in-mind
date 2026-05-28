@@ -9,6 +9,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const feedRoutes = require('./routes/feedRoutes');
 const taskRoutes = require('./routes/taskRoutes');
+const reminderRoutes = require('./routes/reminderRoutes');
 
 
 const cookieParser = require('cookie-parser');
@@ -58,6 +59,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/reminders', reminderRoutes);
 
 
 // Health check
