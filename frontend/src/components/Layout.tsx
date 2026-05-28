@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import BottomNav from './BottomNav';
@@ -24,6 +25,10 @@ export default function Layout() {
     }
     return () => { document.body.style.overflow = ''; };
   }, [isMobileMenuOpen]);
+
+  const navigate = useNavigate();
+  const showFab = location.pathname === '/tasks' || location.pathname === '/reminders';
+  const fabTarget = location.pathname === '/tasks' ? '/tasks/new' : '/reminders/new';
 
   return (
     <div className="flex h-screen bg-white dark:bg-[#111318] overflow-hidden">
@@ -55,6 +60,17 @@ export default function Layout() {
         <main className={`flex-1 overflow-y-auto w-full max-w-7xl mx-auto p-3 sm:p-4 md:p-6 pb-24 md:pb-6 relative custom-scrollbar overflow-x-hidden ${location.pathname === '/account' || location.pathname === '/gallery' ? '!p-0 !max-w-none' : ''}`}>
           <Outlet context={{ searchQuery }} />
         </main>
+
+        {/* Floating Action Button */}
+        {showFab && (
+          <button
+            onClick={() => navigate(fabTarget)}
+            className="fixed bottom-24 right-5 md:bottom-8 md:right-8 w-14 h-14 bg-[#FFC107] hover:bg-[#F5B000] text-white rounded-full flex items-center justify-center shadow-lg shadow-[#FFC107]/40 transition-all active:scale-90 z-50"
+          >
+            <Plus size={26} strokeWidth={3} />
+          </button>
+        )}
+
         <BottomNav />
       </div>
     </div>
