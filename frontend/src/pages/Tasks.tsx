@@ -168,7 +168,7 @@ export default function Tasks() {
       if (navigator.vibrate) {
         navigator.vibrate(50);
       }
-    }, 600); // 600ms hold time
+    }, 350); // 350ms hold time
   };
 
   const cancelPress = () => {
