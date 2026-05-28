@@ -4,6 +4,8 @@ const User = require('../models/User');
 const { Readable } = require('stream');
 const fs = require('fs');
 const path = require('path');
+const { getDriveClient } = require('../services/driveService');
+const jwt = require('jsonwebtoken');
 
 /**
  * @desc    Upload media to Google Drive and save metadata
@@ -11,21 +13,16 @@ const path = require('path');
  * @access  Private
  */
 const uploadMedia = async (req, res) => {
-  const { googleAccessToken } = req.body;
   const file = req.file;
 
   console.log('[Upload] Starting upload process...');
-  if (!file) console.warn('[Upload] No file received in request.');
-  if (!googleAccessToken) console.warn('[Upload] No Google Access Token received.');
-
-  if (!file || !googleAccessToken) {
-    return res.status(400).json({ message: 'Missing file or access token' });
+  if (!file) {
+    console.warn('[Upload] No file received in request.');
+    return res.status(400).json({ message: 'Missing file' });
   }
 
   try {
-    const auth = new google.auth.OAuth2();
-    auth.setCredentials({ access_token: googleAccessToken });
-    const drive = google.drive({ version: 'v3', auth });
+    const drive = getDriveClient(req.user);
 
     // 1. Get or Create the 'Keep In Mind' Folder
     console.log('[Upload] Checking for root folder...');
@@ -260,8 +257,6 @@ const restoreMedia = async (req, res) => {
  * @access  Private
  */
 const permanentDeleteMedia = async (req, res) => {
-  const googleAccessToken = req.headers['google-access-token'];
-
   try {
     const media = await Media.findOne({ _id: req.params.id, userId: req.user._id });
 
@@ -269,17 +264,12 @@ const permanentDeleteMedia = async (req, res) => {
       return res.status(404).json({ message: 'Media not found' });
     }
 
-    if (googleAccessToken) {
-      const auth = new google.auth.OAuth2();
-      auth.setCredentials({ access_token: googleAccessToken });
-      const drive = google.drive({ version: 'v3', auth });
-
-      try {
-        await drive.files.delete({ fileId: media.fileId });
-        console.log(`[Drive] Permanently deleted: ${media.fileId}`);
-      } catch (driveErr) {
-        console.warn('Could not delete from Drive, maybe already gone:', driveErr.message);
-      }
+    try {
+      const drive = getDriveClient(req.user);
+      await drive.files.delete({ fileId: media.fileId });
+      console.log(`[Drive] Permanently deleted: ${media.fileId}`);
+    } catch (driveErr) {
+      console.warn('Could not delete from Drive, maybe already gone:', driveErr.message);
     }
 
     await Media.findByIdAndDelete(req.params.id);
@@ -297,18 +287,10 @@ const permanentDeleteMedia = async (req, res) => {
  * @access  Private
  */
 const getGalleryStorage = async (req, res) => {
-  const googleAccessToken = req.headers['google-access-token'];
   console.log('[Storage] Fetching totals...');
 
-  if (!googleAccessToken) {
-    console.warn('[Storage] Missing access token header.');
-    return res.status(400).json({ message: 'Missing Google access token' });
-  }
-
   try {
-    const auth = new google.auth.OAuth2();
-    auth.setCredentials({ access_token: googleAccessToken });
-    const drive = google.drive({ version: 'v3', auth });
+    const drive = getDriveClient(req.user);
 
     // 1. Find root folder
     const rootRes = await drive.files.list({
@@ -388,13 +370,16 @@ const streamMedia = async (req, res) => {
 
   if (!token || token === 'null' || token === 'undefined') {
     console.warn(`[Stream Error] Missing or invalid token for file: ${fileId}`);
-    return res.status(401).json({ message: 'Valid Google token required for streaming' });
+    return res.status(401).json({ message: 'Valid token required for streaming' });
   }
 
   try {
-    const auth = new google.auth.OAuth2();
-    auth.setCredentials({ access_token: token });
-    const drive = google.drive({ version: 'v3', auth });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(401).json({ message: 'User not found' });
+
+    const drive = getDriveClient(user);
+    const auth = drive.context._options.auth;
 
     if (thumbnail === 'true') {
       // Get the thumbnail link from Drive metadata
@@ -467,7 +452,6 @@ const streamMedia = async (req, res) => {
  */
 const renameMedia = async (req, res) => {
   const { newName } = req.body;
-  const googleAccessToken = req.headers['google-access-token'];
 
   if (!newName) {
     return res.status(400).json({ message: 'New name is required' });
@@ -483,25 +467,18 @@ const renameMedia = async (req, res) => {
       return res.status(404).json({ message: 'Media not found in database' });
     }
 
-    // 1. Update in Google Drive if token is available
-    if (googleAccessToken) {
-      console.log(`[Rename] Updating Google Drive file: ${media.fileId}`);
-      const auth = new google.auth.OAuth2();
-      auth.setCredentials({ access_token: googleAccessToken });
-      const drive = google.drive({ version: 'v3', auth });
-
-      try {
-        await drive.files.update({
-          fileId: media.fileId,
-          requestBody: { name: newName }
-        });
-        console.log(`[Rename] Drive file ${media.fileId} successfully renamed to: ${newName}`);
-      } catch (driveErr) {
-        console.error('[Rename] Google Drive update failed:', driveErr.message);
-        // We continue anyway to update the local DB
-      }
-    } else {
-      console.warn('[Rename] No Google Access Token provided. Skipping Drive update.');
+    // 1. Update in Google Drive
+    console.log(`[Rename] Updating Google Drive file: ${media.fileId}`);
+    try {
+      const drive = getDriveClient(req.user);
+      await drive.files.update({
+        fileId: media.fileId,
+        requestBody: { name: newName }
+      });
+      console.log(`[Rename] Drive file ${media.fileId} successfully renamed to: ${newName}`);
+    } catch (driveErr) {
+      console.error('[Rename] Google Drive update failed:', driveErr.message);
+      // We continue anyway to update the local DB
     }
 
     // 2. Update in MongoDB
