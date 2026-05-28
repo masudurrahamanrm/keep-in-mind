@@ -16,12 +16,23 @@ export default function BackgroundSync() {
       return;
     }
 
-    const notesKey = `keep-in-mind-notes-${user._id}`;
     const syncTimeKey = `keep-in-mind-last-sync-${user._id}`;
+    const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
     const performSync = async () => {
       try {
-        const notes = JSON.parse(localStorage.getItem(notesKey) || '[]');
+        let notes = [];
+        const res = await fetch(`${API_BASE}/notes`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          notes = await res.json();
+        } else {
+          // Fallback to local storage
+          const notesKey = `keep-in-mind-notes-${user._id}`;
+          notes = JSON.parse(localStorage.getItem(notesKey) || '[]');
+        }
+
         if (notes.length === 0) return; // Don't sync if there's nothing to sync
 
         await syncNotesToGoogleDrive(notes, googleAccessToken, token);

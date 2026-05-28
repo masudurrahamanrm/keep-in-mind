@@ -63,6 +63,8 @@ const initialNotes = [
   }
 ];
 
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
 export default function Notes() {
   const { user, token, googleAccessToken } = useAuth();
   const navigate = useNavigate();
@@ -70,10 +72,44 @@ export default function Notes() {
   
   const storageKey = user ? `keep-in-mind-notes-${user._id}` : 'keep-in-mind-notes-guest';
 
-  const [notes, setNotes] = useState(() => {
-    const saved = localStorage.getItem(storageKey);
-    return saved ? JSON.parse(saved) : initialNotes;
-  });
+  const [notes, setNotes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Load notes
+  useEffect(() => {
+    const loadNotes = async () => {
+      if (token) {
+        setLoading(true);
+        try {
+          const res = await fetch(`${API_BASE}/notes`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setNotes(data);
+            // Cache for BackgroundSync/Editor
+            localStorage.setItem(storageKey, JSON.stringify(data));
+          }
+        } catch (error) {
+          console.error('Error fetching notes:', error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        // Guest mode fallback
+        const saved = localStorage.getItem(storageKey);
+        setNotes(saved ? JSON.parse(saved) : initialNotes);
+      }
+    };
+    loadNotes();
+  }, [token, storageKey]);
+
+  // Sync to localStorage only in guest mode or as cache
+  useEffect(() => {
+    if (!token) {
+      localStorage.setItem(storageKey, JSON.stringify(notes));
+    }
+  }, [notes, token, storageKey]);
 
   // Auto-Sync to Google Drive
   useEffect(() => {
@@ -100,11 +136,6 @@ export default function Notes() {
   const [filterActive, setFilterActive] = useState('All');
   const { searchQuery } = useOutletContext<{ searchQuery: string }>();
 
-  // Persist notes
-  useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(notes));
-  }, [notes, storageKey]);
-
   const filters = ['All', ...(() => {
     const saved = localStorage.getItem('keep-in-mind-labels');
     return saved ? JSON.parse(saved) : ['Personal', 'Work', 'Ideas', 'Urgent'];
@@ -128,6 +159,7 @@ export default function Notes() {
   }, [notes, searchQuery, filterActive]);
 
   const handleSaveNote = (savedNote: any) => {
+    // Legacy support for Editor, not strictly needed as Editor handles saves directly now
     if (savedNote.isNew || !savedNote.id) {
       setNotes([{
         ...savedNote,
@@ -141,31 +173,84 @@ export default function Notes() {
     }
   };
 
-  const handleDeleteNote = (noteId: number) => {
-    setNotes(notes.map(n => n.id === noteId ? { ...n, trashed: true, pinned: false } : n));
+  const handleDeleteNote = async (noteId: number | string) => {
+    if (token) {
+      try {
+        await fetch(`${API_BASE}/notes/${noteId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ trashed: true, pinned: false })
+        });
+      } catch (err) { console.error('Error deleting note:', err); }
+    }
+    setNotes(notes.map(n => (n._id || n.id) === noteId ? { ...n, trashed: true, pinned: false } : n));
     setContextMenu(null);
   };
 
-  const handleDuplicate = (note: any) => {
-    const copy = { ...note, id: Date.now(), title: `${note.title} (copy)`, date: new Date().toISOString() };
-    setNotes(prev => [copy, ...prev]);
+  const handleDuplicate = async (note: any) => {
+    const copy = { ...note, title: `${note.title} (copy)`, date: new Date().toISOString() };
+    delete copy._id; // Remove MongoDB ID so it creates a new one
+    copy.id = Date.now();
+    
+    if (token) {
+      try {
+        const res = await fetch(`${API_BASE}/notes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(copy)
+        });
+        if (res.ok) {
+          const newNote = await res.json();
+          setNotes(prev => [newNote, ...prev]);
+        }
+      } catch (err) { console.error('Error duplicating note:', err); }
+    } else {
+      setNotes(prev => [copy, ...prev]);
+    }
     setContextMenu(null);
   };
 
-  const handlePin = (note: any) => {
+  const handlePin = async (note: any) => {
     const updated = { ...note, pinned: !note.pinned };
-    setNotes(prev => prev.map(n => n.id === note.id ? updated : n));
+    if (token) {
+      try {
+        await fetch(`${API_BASE}/notes/${note._id || note.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ pinned: updated.pinned })
+        });
+      } catch (err) { console.error('Error pinning note:', err); }
+    }
+    setNotes(prev => prev.map(n => (n._id || n.id) === (note._id || note.id) ? updated : n));
     setContextMenu(null);
   };
 
-  const handleAddLabel = (note: any, label: string) => {
+  const handleAddLabel = async (note: any, label: string) => {
     const updated = { ...note, category: label };
-    setNotes(prev => prev.map(n => n.id === note.id ? updated : n));
+    if (token) {
+      try {
+        await fetch(`${API_BASE}/notes/${note._id || note.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ category: label })
+        });
+      } catch (err) { console.error('Error adding label:', err); }
+    }
+    setNotes(prev => prev.map(n => (n._id || n.id) === (note._id || note.id) ? updated : n));
   };
 
-  const handleArchive = (note: any) => {
+  const handleArchive = async (note: any) => {
     const nowArchived = !note.archived;
-    setNotes(prev => prev.map(n => n.id === note.id ? { ...n, archived: nowArchived } : n));
+    if (token) {
+      try {
+        await fetch(`${API_BASE}/notes/${note._id || note.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ archived: nowArchived })
+        });
+      } catch (err) { console.error('Error archiving note:', err); }
+    }
+    setNotes(prev => prev.map(n => (n._id || n.id) === (note._id || note.id) ? { ...n, archived: nowArchived } : n));
     setContextMenu(null);
   };
 
@@ -209,8 +294,9 @@ export default function Notes() {
 
   const openNoteForEdit = (note: any) => {
     setContextMenu(null);
-    if (note.type === 'drawing') navigate(`/drawing/${note.id}`);
-    else navigate(`/editor/${note.id}`);
+    const noteId = note._id || note.id;
+    if (note.type === 'drawing') navigate(`/drawing/${noteId}`);
+    else navigate(`/editor/${noteId}`);
   };
 
   // Icon mapping helper based on note title and category
@@ -324,7 +410,7 @@ export default function Notes() {
 
               return (
                 <div
-                  key={note.id}
+                  key={note._id || note.id}
                   onClick={(e) => handleNoteClick(e, note)}
                   onMouseDown={(e) => startPress(e, note)}
                   onMouseUp={cancelPress}
@@ -424,8 +510,8 @@ export default function Notes() {
 
               return (
                 <motion.div
-                  layoutId={`note-${note.id}`}
-                  key={note.id}
+                  layoutId={`note-${note._id || note.id}`}
+                  key={note._id || note.id}
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
@@ -530,7 +616,7 @@ export default function Notes() {
             labels={filters.filter(f => f !== 'All')}
             onClose={() => setContextMenu(null)}
             onEdit={() => openNoteForEdit(contextMenu.note)}
-            onDelete={() => handleDeleteNote(contextMenu.note.id)}
+            onDelete={() => handleDeleteNote(contextMenu.note._id || contextMenu.note.id)}
             onDuplicate={() => handleDuplicate(contextMenu.note)}
             onArchive={() => handleArchive(contextMenu.note)}
             onPin={() => handlePin(contextMenu.note)}

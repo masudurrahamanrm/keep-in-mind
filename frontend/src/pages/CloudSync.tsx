@@ -82,7 +82,16 @@ export default function CloudSync() {
     setIsSyncing(true);
     setSyncResult(null);
     try {
-      const notes = JSON.parse(localStorage.getItem(notesKey) || '[]');
+      let notes = [];
+      const res = await fetch(`${API_BASE}/notes`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        notes = await res.json();
+      } else {
+        notes = JSON.parse(localStorage.getItem(notesKey) || '[]');
+      }
+      
       const result = await syncNotesToGoogleDrive(notes, googleAccessToken, token);
       const now = new Date().toLocaleString();
       setLastSynced(now);

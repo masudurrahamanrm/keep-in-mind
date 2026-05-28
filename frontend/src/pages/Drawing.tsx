@@ -318,13 +318,32 @@ export default function Drawing() {
     }
   }, [tool, color, brushSize, opacity, theme]);
 
+  const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
   // Load Note Data
   useEffect(() => {
-    if (id && fabricCanvas.current) {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const notes = JSON.parse(saved);
-        const existingNote = notes.find((n: any) => n.id.toString() === id);
+    const loadDrawing = async () => {
+      if (id && fabricCanvas.current) {
+        let existingNote = null;
+        if (token) {
+          try {
+            const res = await fetch(`${API_BASE}/notes/${id}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+              existingNote = await res.json();
+            }
+          } catch (error) {
+            console.error('Error fetching drawing:', error);
+          }
+        } else {
+          const saved = localStorage.getItem(storageKey);
+          if (saved) {
+            const notes = JSON.parse(saved);
+            existingNote = notes.find((n: any) => n.id.toString() === id);
+          }
+        }
+
         if (existingNote) {
           setNote(existingNote);
           if (existingNote.canvasData) {
@@ -348,11 +367,13 @@ export default function Drawing() {
             }
           }
         }
+      } else {
+        setNote({ isNew: true, title: 'Advanced Drawing', type: 'drawing' });
       }
-    } else {
-      setNote({ isNew: true, title: 'Advanced Drawing', type: 'drawing' });
-    }
-  }, [id, storageKey]);
+    };
+    
+    loadDrawing();
+  }, [id, storageKey, token]);
 
   // Shapes & Text Tools
   const addShape = (type: Tool) => {
@@ -489,15 +510,12 @@ export default function Drawing() {
     }
   };
 
-  const handleSave = (silent = false) => {
+  const handleSave = async (silent = false) => {
     const canvas = fabricCanvas.current;
     if (!canvas) return;
 
     const dataUrl = canvas.toDataURL({ format: 'png' });
     const json = canvas.toJSON();
-    
-    const saved = localStorage.getItem(storageKey);
-    const notes = saved ? JSON.parse(saved) : [];
     
     let updatedNote = { 
       ...note, 
@@ -507,17 +525,42 @@ export default function Drawing() {
       type: 'drawing'
     };
     
-    if (note.isNew) {
-      updatedNote = { ...updatedNote, id: Date.now(), isNew: false };
-      notes.unshift(updatedNote);
-      setNote(updatedNote);
+    if (token) {
+      try {
+        if (note.isNew) {
+          delete updatedNote.isNew;
+          await fetch(`${API_BASE}/notes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify(updatedNote)
+          });
+        } else {
+          await fetch(`${API_BASE}/notes/${note._id || note.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify(updatedNote)
+          });
+        }
+      } catch (error) {
+        console.error('Error saving drawing:', error);
+      }
     } else {
-      const idx = notes.findIndex((n: any) => n.id === note.id);
-      if (idx !== -1) notes[idx] = updatedNote;
-      else notes.unshift(updatedNote);
-    }
+      const saved = localStorage.getItem(storageKey);
+      const notes = saved ? JSON.parse(saved) : [];
+      
+      if (note.isNew) {
+        updatedNote = { ...updatedNote, id: Date.now(), isNew: false };
+        notes.unshift(updatedNote);
+        setNote(updatedNote);
+      } else {
+        const idx = notes.findIndex((n: any) => n.id === note.id);
+        if (idx !== -1) notes[idx] = updatedNote;
+        else notes.unshift(updatedNote);
+      }
 
-    localStorage.setItem(storageKey, JSON.stringify(notes));
+      localStorage.setItem(storageKey, JSON.stringify(notes));
+    }
+    
     if (!silent) {
       navigate('/notes');
     }

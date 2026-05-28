@@ -166,41 +166,70 @@ export default function Editor() {
     },
   });
 
+  const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
   // Load existing note
   useEffect(() => {
-    const savedNotes = JSON.parse(localStorage.getItem(storageKey) || '[]');
-    if (currentId) {
-      const existingNote = savedNotes.find((n: any) => n.id === parseInt(currentId as string) || n.id === currentId);
-      if (existingNote) {
-        setTitle(existingNote.title || '');
-        if (editor) {
-          editor.commands.setContent(existingNote.content || '');
+    const loadNote = async () => {
+      if (currentId) {
+        if (token) {
+          try {
+            const res = await fetch(`${API_BASE}/notes/${currentId}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+              const existingNote = await res.json();
+              setTitle(existingNote.title || '');
+              if (editor) {
+                editor.commands.setContent(existingNote.content || '');
+              }
+              const matchedColor = COLORS.find(c => c.value === existingNote.color) || COLORS[0];
+              setColor(matchedColor);
+              setCategory(existingNote.category || 'Personal');
+              setIsPinned(existingNote.pinned || false);
+              setIsArchived(existingNote.archived || false);
+            } else {
+              navigate('/notes');
+            }
+          } catch (error) {
+            console.error('Error fetching note:', error);
+            navigate('/notes');
+          }
+        } else {
+          // Guest mode fallback
+          const savedNotes = JSON.parse(localStorage.getItem(storageKey) || '[]');
+          const existingNote = savedNotes.find((n: any) => n.id === parseInt(currentId as string) || n.id === currentId);
+          if (existingNote) {
+            setTitle(existingNote.title || '');
+            if (editor) {
+              editor.commands.setContent(existingNote.content || '');
+            }
+            const matchedColor = COLORS.find(c => c.value === existingNote.color) || COLORS[0];
+            setColor(matchedColor);
+            setCategory(existingNote.category || 'Personal');
+            setIsPinned(existingNote.pinned || false);
+            setIsArchived(existingNote.archived || false);
+          } else {
+            navigate('/notes');
+          }
         }
-        const matchedColor = COLORS.find(c => c.value === existingNote.color) || COLORS[0];
-        setColor(matchedColor);
-        setCategory(existingNote.category || 'Personal');
-        setIsPinned(existingNote.pinned || false);
-        setIsArchived(existingNote.archived || false);
-      } else {
-        navigate('/notes');
       }
+    };
+    
+    if (editor && currentId) {
+      loadNote();
     }
-  }, [currentId, storageKey, navigate, editor]);
+  }, [currentId, storageKey, navigate, editor, token]);
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     if (!editor) return;
     const content = editor.getHTML();
     if (!title && (content === '<p></p>' || !content)) return;
     
     setIsSaving(true);
-    const savedNotes = JSON.parse(localStorage.getItem(storageKey) || '[]');
     const now = new Date();
     
-    // Use currentId if available, otherwise create a new one
-    const noteId = currentId ? (typeof currentId === 'string' && !isNaN(parseInt(currentId)) ? parseInt(currentId) : currentId) : Date.now();
-    
     const noteData = {
-      id: noteId,
       title,
       content: content,
       color: color.value,
@@ -208,23 +237,53 @@ export default function Editor() {
       category,
       pinned: isPinned,
       archived: isArchived,
-      date: new Date().toISOString(),
+      date: now.toISOString(),
       type: 'text'
     };
 
-    let updatedNotes;
-    if (currentId) {
-      updatedNotes = savedNotes.map((n: any) => n.id === noteData.id ? noteData : n);
+    if (token) {
+      try {
+        if (currentId) {
+          await fetch(`${API_BASE}/notes/${currentId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify(noteData)
+          });
+        } else {
+          const res = await fetch(`${API_BASE}/notes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify(noteData)
+          });
+          if (res.ok) {
+            const newNote = await res.json();
+            setCurrentId(newNote._id);
+            window.history.replaceState(null, '', `/editor/${newNote._id}`);
+          }
+        }
+      } catch (error) {
+        console.error('Error saving note:', error);
+      }
     } else {
-      updatedNotes = [noteData, ...savedNotes];
-      setCurrentId(noteId); // Lock the ID so next save updates this note
-      window.history.replaceState(null, '', `/editor/${noteId}`);
+      // Guest mode fallback
+      const savedNotes = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      const noteId = currentId ? (typeof currentId === 'string' && !isNaN(parseInt(currentId)) ? parseInt(currentId) : currentId) : Date.now();
+      const localNoteData = { ...noteData, id: noteId };
+      
+      let updatedNotes;
+      if (currentId) {
+        updatedNotes = savedNotes.map((n: any) => n.id === noteId ? localNoteData : n);
+      } else {
+        updatedNotes = [localNoteData, ...savedNotes];
+        setCurrentId(noteId);
+        window.history.replaceState(null, '', `/editor/${noteId}`);
+      }
+      localStorage.setItem(storageKey, JSON.stringify(updatedNotes));
     }
 
-    localStorage.setItem(storageKey, JSON.stringify(updatedNotes));
     setIsSaving(false);
     setLastSaved(now);
-  }, [title, editor, color, category, isPinned, isArchived, currentId, storageKey]);
+  }, [title, editor, color, category, isPinned, isArchived, currentId, storageKey, token]);
 
   // Debounced auto-save for typical content (Tiptap)
   useEffect(() => {

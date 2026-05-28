@@ -60,6 +60,7 @@ app.use('/api/feed', feedRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/reminders', reminderRoutes);
+app.use('/api/notes', noteRoutes);
 
 
 // Health check
