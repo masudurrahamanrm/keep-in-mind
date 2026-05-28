@@ -11,6 +11,7 @@ import Layout from './components/Layout';
 import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Heartbeat from './components/Heartbeat';
+import BackgroundSync from './components/BackgroundSync';
 import { Skeleton } from './components/Skeleton';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
@@ -88,6 +89,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Heartbeat />
+      <BackgroundSync />
       <ToastContainer theme="dark" position="bottom-center" />
       <Routes>
 
