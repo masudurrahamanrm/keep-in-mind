@@ -1,4 +1,4 @@
-import { Search, Bell, Settings, User, Menu, X, ArrowLeft, FileText } from 'lucide-react';
+import { Search, Bell, Settings, User, Menu, X, ArrowLeft, FileText, Plus } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useCallback } from 'react';
