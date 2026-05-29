@@ -5,7 +5,6 @@ import { Plus, CheckSquare, Settings2, MoreHorizontal, Search, FileText, PenLine
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../components/Sidebar';
 import { useAuth } from '../context/AuthContext';
-import { syncNotesToGoogleDrive } from '../services/driveService';
 import SpeedDial from '../components/SpeedDial';
 import NoteContextMenu from '../components/NoteContextMenu';
 
@@ -111,27 +110,7 @@ export default function Notes() {
     }
   }, [notes, token, storageKey]);
 
-  // Auto-Sync to Google Drive
-  useEffect(() => {
-    const isAutoSyncEnabled = localStorage.getItem('keep-in-mind-auto-sync') === 'true';
-    if (!isAutoSyncEnabled || !user || !token || !googleAccessToken) return;
 
-    const syncTimeout = setTimeout(async () => {
-      try {
-        const syncableNotes = notes;
-        if (syncableNotes.length === 0) return;
-        console.log('🔄 Auto-syncing to Google Drive...');
-        await syncNotesToGoogleDrive(syncableNotes, googleAccessToken, token);
-        
-        const now = new Date().toLocaleString();
-        localStorage.setItem(`keep-in-mind-last-sync-${user._id}`, now);
-      } catch (err) {
-        console.error('Auto-sync failed:', err);
-      }
-    }, 3000);
-
-    return () => clearTimeout(syncTimeout);
-  }, [notes, user, token, googleAccessToken]);
 
   const [filterActive, setFilterActive] = useState('All');
   const { searchQuery } = useOutletContext<{ searchQuery: string }>();
