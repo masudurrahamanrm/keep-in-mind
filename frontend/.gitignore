@@ -7,3 +7,9 @@ coverage/
 .env*
 !.env.example
 
+.vite/
+android/
+assets/
+capacitor.config.ts
+metadata.json
+*.zip
