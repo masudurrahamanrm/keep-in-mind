@@ -47,6 +47,23 @@ const noteSchema = new mongoose.Schema({
     enum: ['text', 'list', 'drawing'],
     default: 'text'
   },
+  tags: {
+    type: [String],
+    default: []
+  },
+  version: {
+    type: Number,
+    default: 1
+  },
+  syncStatus: {
+    type: String,
+    enum: ['synced', 'pending', 'conflict'],
+    default: 'synced'
+  },
+  deletedAt: {
+    type: Date,
+    default: null
+  },
   date: {
     type: Date,
     default: Date.now
