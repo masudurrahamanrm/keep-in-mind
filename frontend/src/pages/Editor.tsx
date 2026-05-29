@@ -11,7 +11,6 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
 import Placeholder from '@tiptap/extension-placeholder';
 import { TextAlign } from '@tiptap/extension-text-align';
 import { Image } from '@tiptap/extension-image';
@@ -19,7 +18,6 @@ import { Table } from '@tiptap/extension-table';
 import { TableRow } from '@tiptap/extension-table-row';
 import { TableCell } from '@tiptap/extension-table-cell';
 import { TableHeader } from '@tiptap/extension-table-header';
-import { Strike } from '@tiptap/extension-strike';
 import { Highlight } from '@tiptap/extension-highlight';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
@@ -67,7 +65,7 @@ export default function Editor() {
   const { id: paramId } = useParams();
   const [currentId, setCurrentId] = useState<string | number | undefined>(paramId);
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   
   const storageKey = user ? `keep-in-mind-notes-${user._id}` : 'keep-in-mind-notes-guest';
   const labelKey = 'keep-in-mind-labels';
@@ -134,8 +132,9 @@ export default function Editor() {
   // ── Tiptap Editor Initialization ──
   const editor = useEditor({
     extensions: [
-      StarterKit,
-      Underline,
+      StarterKit.configure({
+        // Underline is added by StarterKit in TipTap v3 — don't add it separately
+      }),
       Highlight.configure({ multicolor: true }),
       TextStyle,
       Color,
@@ -259,6 +258,9 @@ export default function Editor() {
             const newNote = await res.json();
             setCurrentId(newNote._id);
             window.history.replaceState(null, '', `/editor/${newNote._id}`);
+          } else {
+            const errBody = await res.json().catch(() => ({}));
+            console.error('Save note failed:', res.status, errBody);
           }
         }
       } catch (error) {
