@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: keep-in-mind-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node src/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false  # Set this in Render dashboard -> Environment
+      - key: JWT_SECRET
+        sync: false  # Set this in Render dashboard -> Environment
+      - key: SESSION_SECRET
+        sync: false  # Set this in Render dashboard -> Environment
+      - key: GOOGLE_CLIENT_ID
+        sync: false  # Set this in Render dashboard -> Environment
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false  # Set this in Render dashboard -> Environment
+      - key: CLIENT_URL
+        value: https://keep-in-mind.vercel.app  # Update to your actual frontend URL
