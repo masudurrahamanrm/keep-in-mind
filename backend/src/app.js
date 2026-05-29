@@ -10,6 +10,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const feedRoutes = require('./routes/feedRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const reminderRoutes = require('./routes/reminderRoutes');
+const noteRoutes = require('./routes/noteRoutes');
 
 
 const cookieParser = require('cookie-parser');
