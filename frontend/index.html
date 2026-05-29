@@ -17,16 +17,25 @@
     <script type="module" src="/src/main.tsx"></script>
     <script>
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('SW registered:', reg.scope))
-            .catch(err => {
-              console.error('SW registration failed:', err);
-              if (window.location.protocol === 'https:') {
-                console.warn(`⚠️ Service Worker blocked by SSL certificate. Visit ${window.location.origin} and click "Advanced" to trust the certificate, or enable chrome://flags/#unsafely-treat-insecure-origin-as-secure`);
-              }
-            });
-        });
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '0.0.0.0') {
+          // Force unregister service worker in local development to prevent caching old builds
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for(let registration of registrations) {
+              registration.unregister();
+            }
+          });
+        } else {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+              .then(reg => console.log('SW registered:', reg.scope))
+              .catch(err => {
+                console.error('SW registration failed:', err);
+                if (window.location.protocol === 'https:') {
+                  console.warn(`⚠️ Service Worker blocked by SSL certificate. Visit ${window.location.origin} and click "Advanced" to trust the certificate, or enable chrome://flags/#unsafely-treat-insecure-origin-as-secure`);
+                }
+              });
+          });
+        }
       }
     </script>
   </body>
