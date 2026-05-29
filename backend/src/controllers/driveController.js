@@ -1,15 +1,48 @@
 const { google } = require('googleapis');
 
 /**
+ * Helper to retry async operations
+ */
+const withRetry = async (operation, maxRetries = 3) => {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (attempt === maxRetries) throw error;
+      console.log(`[Drive Sync] Attempt ${attempt} failed, retrying... (${error.message})`);
+      await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
+    }
+  }
+};
+
+/**
  * @desc    Sync notes to Google Drive
  * @route   POST /api/drive/sync
  * @access  Private
  */
 const syncToDrive = async (req, res) => {
   const { notes, googleAccessToken } = req.body;
+  const userId = req.user ? req.user._id : 'Unknown';
 
-  if (!notes || !googleAccessToken) {
-    return res.status(400).json({ message: 'Missing notes or access token' });
+  console.log('----------------------------------------');
+  console.log('[Drive Sync] Starting Google Drive Sync');
+  console.log('User:', userId);
+  console.log('Access Token Valid:', !!googleAccessToken);
+  console.log('Notes Found:', notes ? notes.length : 0);
+  console.log('----------------------------------------');
+
+  if (!notes || !Array.isArray(notes)) {
+    return res.status(400).json({ 
+      success: false, 
+      error: 'Missing or invalid notes array' 
+    });
+  }
+
+  if (!googleAccessToken) {
+    return res.status(401).json({ 
+      success: false, 
+      error: 'Missing Google Access Token' 
+    });
   }
 
   try {
@@ -17,47 +50,77 @@ const syncToDrive = async (req, res) => {
     auth.setCredentials({ access_token: googleAccessToken });
     const drive = google.drive({ version: 'v3', auth });
 
-    // 1. Find or Create the 'Keep In Mind' Folder
+    // 1. Find or Create the 'Keep In Mind' Folder (with retries)
     let folderId;
-    const folderResponse = await drive.files.list({
-      q: "name = 'Keep In Mind' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
-      fields: 'files(id)',
-      spaces: 'drive',
-    });
+    try {
+      console.log('[Drive Sync] Verifying/Creating Keep In Mind folder...');
+      const folderResponse = await withRetry(() => drive.files.list({
+        q: "name = 'Keep In Mind' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+        fields: 'files(id)',
+        spaces: 'drive',
+      }));
 
-    if (folderResponse.data.files.length > 0) {
-      folderId = folderResponse.data.files[0].id;
-    } else {
-      const folderMetadata = { name: 'Keep In Mind', mimeType: 'application/vnd.google-apps.folder' };
-      const folder = await drive.files.create({ resource: folderMetadata, fields: 'id' });
-      folderId = folder.data.id;
+      if (folderResponse.data.files.length > 0) {
+        folderId = folderResponse.data.files[0].id;
+        console.log('Folder ID:', folderId, '(Existing)');
+      } else {
+        const folderMetadata = { name: 'Keep In Mind', mimeType: 'application/vnd.google-apps.folder' };
+        const folder = await withRetry(() => drive.files.create({ resource: folderMetadata, fields: 'id' }));
+        folderId = folder.data.id;
+        console.log('Folder ID:', folderId, '(Created)');
+      }
+    } catch (folderErr) {
+      console.error('[Drive Sync] Folder setup failed:', folderErr.message);
+      // If folder creation fails, it's likely an auth issue or scope issue
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to access or create Google Drive folder',
+        details: folderErr.message,
+        stack: process.env.NODE_ENV === 'development' ? folderErr.stack : undefined
+      });
     }
 
     // 2. Get existing note files in this folder to manage updates/deletions
-    const existingFilesRes = await drive.files.list({
+    console.log('[Drive Sync] Fetching existing files map...');
+    const existingFilesRes = await withRetry(() => drive.files.list({
       q: `'${folderId}' in parents and trashed = false and mimeType = 'text/plain'`,
       fields: 'files(id, name)',
       spaces: 'drive',
-    });
-    const existingFiles = existingFilesRes.data.files;
+    }));
+    
+    const existingFiles = existingFilesRes.data.files || [];
     const existingFileMap = new Map(existingFiles.map(f => [f.name, f.id]));
-
     const processedFileNames = new Set();
 
     // 3. Sync each note
     let successCount = 0;
     let failCount = 0;
+    const failedFiles = [];
 
-    // Use a loop to avoid hitting rate limits too hard, but isolate errors
     for (const note of notes) {
+      // Step A: Validate Note Data
+      if (!note.title && !note.content) {
+        failCount++;
+        failedFiles.push({ id: note._id || note.id, reason: 'Missing title and content' });
+        continue;
+      }
+      
+      const noteId = note._id || note.id;
+      if (!noteId) {
+        failCount++;
+        failedFiles.push({ id: 'unknown', reason: 'Missing note ID' });
+        continue;
+      }
+
+      console.log('Uploading:', note.title || 'Untitled');
+
       try {
-        // Create a URL-safe name based on title and ID
         const safeTitle = (note.title || 'Untitled').replace(/[^a-z0-9]/gi, '_').substring(0, 50);
-        const fileName = `${safeTitle}_${note.id}.txt`;
+        const fileName = `${safeTitle}_${noteId}.txt`;
         processedFileNames.add(fileName);
 
         const metadata = {
-          id: note.id,
+          id: noteId,
           title: note.title,
           color: note.color,
           category: note.category,
@@ -65,58 +128,68 @@ const syncToDrive = async (req, res) => {
           lastModified: new Date().toISOString()
         };
 
-        const fileContent = `${note.content}\n\n---\nMETADATA: ${JSON.stringify(metadata)}`;
+        const fileContent = `${note.content || ''}\n\n---\nMETADATA: ${JSON.stringify(metadata)}`;
+        
+        // Optional size validation (e.g. limit to 5MB text files)
+        if (Buffer.byteLength(fileContent, 'utf8') > 5 * 1024 * 1024) {
+           throw new Error('File size exceeds 5MB limit');
+        }
+
         const media = { mimeType: 'text/plain', body: fileContent };
 
-        if (existingFileMap.has(fileName)) {
-          // Update
-          await drive.files.update({
-            fileId: existingFileMap.get(fileName),
-            media: media,
-          });
-        } else {
-          // Create
-          await drive.files.create({
-            resource: { name: fileName, parents: [folderId], mimeType: 'text/plain' },
-            media: media,
-          });
-        }
+        // Step B: Upload or Update with Retry
+        await withRetry(async () => {
+          if (existingFileMap.has(fileName)) {
+            await drive.files.update({
+              fileId: existingFileMap.get(fileName),
+              media: media,
+            });
+          } else {
+            await drive.files.create({
+              resource: { name: fileName, parents: [folderId], mimeType: 'text/plain' },
+              media: media,
+            });
+          }
+        });
+
         successCount++;
       } catch (fileErr) {
         failCount++;
-        console.error(`[Drive Sync] Failed for note ${note.title || 'Untitled'} (${note.id}):`, fileErr.message);
-        // Continue to next note
+        const errorReason = fileErr.response?.data?.error?.message || fileErr.message;
+        console.error(`[Drive Sync] Failed for note ${note.title || 'Untitled'}:`, errorReason);
+        failedFiles.push({ id: noteId, title: note.title, reason: errorReason });
       }
     }
 
-    if (failCount > 0 && successCount === 0) {
-      throw new Error(`Failed to sync all ${failCount} notes. Last error check logs.`);
-    }
-
-    // 4. Cleanup: Delete files that are no longer in our notes list
+    // 4. Cleanup old files (optional, best effort)
     for (const file of existingFiles) {
       if (!processedFileNames.has(file.name)) {
         try {
-          console.log(`Deleting removed note from Drive: ${file.name}`);
           await drive.files.delete({ fileId: file.id });
         } catch (delErr) {
-          if (delErr.code === 403) {
-            console.warn(`Permission denied to delete file: ${file.name}. It might not have been created by this app.`);
-          } else {
-            console.error(`Failed to delete file ${file.name}:`, delErr.message);
-          }
+          // Non-critical, ignore
         }
       }
     }
 
-    res.json({ 
-      message: `Synced ${successCount} notes! ${failCount > 0 ? `(${failCount} failed)` : ''} ☁️`,
-      successCount,
-      failCount 
+    console.log(`[Drive Sync] Complete. Success: ${successCount}, Failed: ${failCount}`);
+
+    // Return detailed partial success format
+    return res.status(200).json({ 
+      success: true,
+      uploaded: successCount,
+      failed: failCount,
+      failedFiles: failedFiles,
+      message: `Synced ${successCount} notes! ${failCount > 0 ? `(${failCount} failed)` : ''} ☁️`
     });
+
   } catch (error) {
-    console.error('Google Drive Multi-Sync Error:', error);
-    res.status(500).json({ message: 'Failed to sync individual files', error: error.message });
+    console.error('[Drive Sync] Critical Error:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: error.message || 'Internal Server Error during Drive Sync',
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
 
