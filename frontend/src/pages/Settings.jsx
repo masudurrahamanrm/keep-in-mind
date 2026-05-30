@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { usePreferences } from '../context/PreferencesContext';
 import { syncNotesToGoogleDrive, fetchNotesFromGoogleDrive } from '../services/driveService';
 
 /* ─── Toggle ─────────────────────────────────────────────────────── */
@@ -85,10 +86,16 @@ function ToggleRow({ icon: Icon, label, checked, onChange, iconColor = '#F3A83B'
 }
 
 /* ─── Theme Color dot ─────────────────────────────────────────────── */
-function ThemeColorDot() {
+function ThemeColorDot({ color }) {
+  const colorMap = {
+    yellow: '#FBC02D',
+    blue: '#007AFF',
+    green: '#34C759',
+    purple: '#AF52DE',
+  };
   return (
     <div className="flex items-center gap-2 text-neutral-400 text-sm">
-      <span className="w-4 h-4 rounded-full bg-[#FBC02D] inline-block" />
+      <span className="w-4 h-4 rounded-full inline-block" style={{ backgroundColor: colorMap[color] || '#FBC02D' }} />
       <ChevronRight size={16} strokeWidth={2} />
     </div>
   );
@@ -118,15 +125,20 @@ export default function Settings() {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const { user, token, googleAccessToken } = useAuth();
+  const { 
+    themeColor, setThemeColor, 
+    fontStyle, setFontStyle, 
+    textSize, setTextSize,
+    hapticFeedback, setHapticFeedback,
+    triggerHaptic 
+  } = usePreferences();
 
   const [darkMode, setDarkMode]         = useState(theme === 'dark');
   const [animations, setAnimations]     = useState(true);
-  const [haptic, setHaptic]             = useState(true);
   const [lockPasscode, setLockPasscode] = useState(false);
   const [isSyncing, setIsSyncing]       = useState(false);
   const [isFetching, setIsFetching]     = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-
 
   const notesKey    = user ? `keep-in-mind-notes-${user._id}` : 'keep-in-mind-notes-guest';
   const syncTimeKey = user ? `keep-in-mind-last-sync-${user._id}` : 'keep-in-mind-last-sync-guest';
@@ -135,6 +147,33 @@ export default function Settings() {
   const handleDarkMode = (val) => {
     setDarkMode(val);
     setTheme(val ? 'dark' : 'light');
+    triggerHaptic();
+  };
+
+  const cycleTheme = () => {
+    const themes = ['light', 'dark', 'system'];
+    const nextTheme = themes[(themes.indexOf(theme) + 1) % themes.length];
+    setTheme(nextTheme);
+    setDarkMode(nextTheme === 'dark');
+    triggerHaptic();
+  };
+
+  const cycleThemeColor = () => {
+    const colors = ['yellow', 'blue', 'green', 'purple'];
+    setThemeColor(colors[(colors.indexOf(themeColor) + 1) % colors.length]);
+    triggerHaptic();
+  };
+
+  const cycleFontStyle = () => {
+    const fonts = ['inter', 'outfit', 'roboto', 'opensans'];
+    setFontStyle(fonts[(fonts.indexOf(fontStyle) + 1) % fonts.length]);
+    triggerHaptic();
+  };
+
+  const cycleTextSize = () => {
+    const sizes = ['small', 'medium', 'large'];
+    setTextSize(sizes[(sizes.indexOf(textSize) + 1) % sizes.length]);
+    triggerHaptic();
   };
 
   const handleDriveSync = async () => {
@@ -179,34 +218,36 @@ export default function Settings() {
 
           {/* Group 1: chevron rows */}
           <Card>
-            <LinkRow icon={Sun} label="Appearance" value="Light" />
+            <div onClick={cycleTheme}>
+              <LinkRow icon={Sun} label="Appearance" value={theme.charAt(0).toUpperCase() + theme.slice(1)} />
+            </div>
             <Divider />
-            <div className="flex items-center justify-between py-4 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
+            <div onClick={cycleThemeColor} className="flex items-center justify-between py-4 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
               <div className="flex items-center gap-4">
                 <div className="text-[#F3A83B]"><Clock size={22} strokeWidth={2} /></div>
                 <span className="font-medium text-neutral-900 dark:text-neutral-100 text-[15px]">Theme Color</span>
               </div>
-              <ThemeColorDot />
+              <ThemeColorDot color={themeColor} />
             </div>
             <Divider />
-            <div className="flex items-center justify-between py-4 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
+            <div onClick={cycleFontStyle} className="flex items-center justify-between py-4 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
               <div className="flex items-center gap-4">
                 <div className="text-[#F3A83B]"><FontATIcon /></div>
                 <span className="font-medium text-neutral-900 dark:text-neutral-100 text-[15px]">Font Style</span>
               </div>
               <div className="flex items-center gap-2 text-neutral-400 text-sm">
-                <span>Inter</span>
+                <span className="capitalize">{fontStyle}</span>
                 <ChevronRight size={16} strokeWidth={2} />
               </div>
             </div>
             <Divider />
-            <div className="flex items-center justify-between py-4 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
+            <div onClick={cycleTextSize} className="flex items-center justify-between py-4 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
               <div className="flex items-center gap-4">
                 <div className="text-[#F3A83B]"><TextSizeIcon /></div>
                 <span className="font-medium text-neutral-900 dark:text-neutral-100 text-[15px]">Text Size</span>
               </div>
               <div className="flex items-center gap-2 text-neutral-400 text-sm">
-                <span>Medium</span>
+                <span className="capitalize">{textSize}</span>
                 <ChevronRight size={16} strokeWidth={2} />
               </div>
             </div>
@@ -215,11 +256,11 @@ export default function Settings() {
           {/* Group 2: toggle rows */}
           <div className="mt-4">
             <Card>
-              <ToggleRow icon={Moon}     label="Enable Dark Mode"   checked={darkMode}    onChange={handleDarkMode}   darkIcon />
+              <ToggleRow icon={Moon}     label="Enable Dark Mode"   checked={theme === 'dark'}    onChange={handleDarkMode}   darkIcon />
               <Divider />
               <ToggleRow icon={Sparkles} label="Enable Animations"  checked={animations}  onChange={setAnimations} />
               <Divider />
-              <ToggleRow icon={Volume2}  label="Haptic Feedback"    checked={haptic}      onChange={setHaptic} />
+              <ToggleRow icon={Volume2}  label="Haptic Feedback"    checked={hapticFeedback}      onChange={(v) => { setHapticFeedback(v); triggerHaptic(); }} />
             </Card>
           </div>
         </section>

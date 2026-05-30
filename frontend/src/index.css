@@ -143,8 +143,75 @@
   --on-tertiary-container: #FFD7F7;
 }
 
+/* ── Custom Theme Colors ─────────────────────────────────────── */
+/* Default Yellow is already handled by :root (light) and [data-theme="dark"] */
+
+/* Blue Theme */
+[data-theme-color="blue"] {
+  --primary: #007AFF;
+  --primary-container: #D1E9FF;
+  --on-primary: #FFFFFF;
+}
+[data-theme="dark"][data-theme-color="blue"],
+[data-theme="amoled"][data-theme-color="blue"] {
+  --primary: #60A5FA;
+  --primary-container: #1E3A8A;
+  --on-primary: #EFF6FF;
+}
+
+/* Green Theme */
+[data-theme-color="green"] {
+  --primary: #34C759;
+  --primary-container: #D1FADF;
+  --on-primary: #FFFFFF;
+}
+[data-theme="dark"][data-theme-color="green"],
+[data-theme="amoled"][data-theme-color="green"] {
+  --primary: #4ADE80;
+  --primary-container: #14532D;
+  --on-primary: #F0FDF4;
+}
+
+/* Purple Theme */
+[data-theme-color="purple"] {
+  --primary: #AF52DE;
+  --primary-container: #F3E8FF;
+  --on-primary: #FFFFFF;
+}
+[data-theme="dark"][data-theme-color="purple"],
+[data-theme="amoled"][data-theme-color="purple"] {
+  --primary: #C084FC;
+  --primary-container: #581C87;
+  --on-primary: #FAF5FF;
+}
+
+/* ── Dynamic Fonts ───────────────────────────────────────────── */
+[data-font="inter"] {
+  --font-active: var(--font-inter);
+}
+[data-font="outfit"] {
+  --font-active: var(--font-outfit);
+}
+[data-font="roboto"] {
+  --font-active: "Roboto", ui-sans-serif, system-ui, sans-serif;
+}
+[data-font="opensans"] {
+  --font-active: "Open Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ── Dynamic Text Sizes ──────────────────────────────────────── */
+[data-text-size="small"] {
+  font-size: 14px;
+}
+[data-text-size="medium"] {
+  font-size: 16px;
+}
+[data-text-size="large"] {
+  font-size: 18px;
+}
+
 body {
-  font-family: var(--font-inter);
+  font-family: var(--font-active, var(--font-inter));
   background-color: var(--surface);
   color: var(--on-surface);
   -webkit-font-smoothing: antialiased;

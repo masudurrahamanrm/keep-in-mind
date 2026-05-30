@@ -14,6 +14,8 @@ const isAdminDomain = hostname === 'admin.keepinmind.in' || hostname.startsWith(
 
 const rootElement = document.getElementById('root')!;
 
+import { PreferencesProvider } from './context/PreferencesContext';
+
 if (isAdminDomain) {
   // Dynamically import admin styles only when on admin domain
   import('@admin/index.css');
@@ -36,9 +38,11 @@ if (isAdminDomain) {
   createRoot(rootElement).render(
     <StrictMode>
       <ThemeProvider>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
+        <PreferencesProvider>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </PreferencesProvider>
       </ThemeProvider>
     </StrictMode>
   );
