@@ -1,6 +1,6 @@
 const express = require('express');
 const passport = require('passport');
-const { googleCallback, getMe, logout, ping } = require('../controllers/authController');
+const { googleCallback, getMe, logout, ping, registerLocal, loginLocal } = require('../controllers/authController');
 const { setup2FA, verify2FA, disable2FA, get2FAStatus, loginVerify2FA } = require('../controllers/twoFactorController');
 const { protect } = require('../middleware/authMiddleware');
 const router = express.Router();
@@ -16,6 +16,10 @@ router.get('/google/callback',
   passport.authenticate('google', { failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:3000'}/auth` }), 
   googleCallback
 );
+
+// Local Auth Routes
+router.post('/register', registerLocal);
+router.post('/login', loginLocal);
 
 // Session routes
 router.get('/me', protect, getMe);

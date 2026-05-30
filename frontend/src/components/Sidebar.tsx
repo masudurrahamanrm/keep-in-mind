@@ -1,9 +1,10 @@
+import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FileText, Compass, Clock, Image as ImageIcon, Users, Activity, Settings, User, X, LogOut, ChevronRight } from 'lucide-react';
+import { FileText, Compass, Clock, Image as ImageIcon, Users, Activity, Settings, User, X, LogOut, ChevronRight, Power } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useAuth } from '../context/AuthContext';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 
 export function cn(...inputs: (string | undefined | null | false)[]) {
   return twMerge(clsx(inputs));
@@ -19,6 +20,16 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onMobileClose }: Si
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    setTimeout(() => {
+      signOut();
+      onMobileClose?.();
+      navigate('/auth');
+    }, 1200); // Wait 1.2s for the full screen animation
+  };
 
   const links = [
     { path: '/notes',   label: 'Notes',   icon: FileText },
@@ -30,6 +41,7 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onMobileClose }: Si
     { path: '/gallery', label: 'Personal', icon: ImageIcon },
     { path: '/labels',  label: 'Labels',   icon: Users    },
     { path: '/archive', label: 'Archive',  icon: Activity },
+    { path: '/settings', label: 'Settings', icon: Settings },
   ];
 
   const renderLinks = (items: { path: string; label: string; icon: any }[]) => (
@@ -101,17 +113,10 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onMobileClose }: Si
 
         {/* Action Buttons */}
         {!isCollapsed || mobile ? (
-          <div className="grid grid-cols-2 gap-2 mt-2 px-1">
-            <button
-              onClick={() => { navigate('/settings'); onMobileClose?.(); }}
-              className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-surface-container-high border border-outline-variant/20 hover:bg-surface-container-highest transition-colors text-on-surface hover:text-primary group shadow-sm"
-            >
-              <Settings size={16} className="group-hover:rotate-45 transition-transform" />
-              <span className="text-xs font-bold tracking-tight">Settings</span>
-            </button>
+          <div className="mt-2 px-1">
             <button
               onClick={() => { signOut(); onMobileClose?.(); navigate('/auth'); }}
-              className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-error/10 border border-error/20 hover:bg-error/20 transition-colors text-error group shadow-sm"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-error/10 border border-error/20 hover:bg-error/20 transition-colors text-error group shadow-sm"
             >
               <LogOut size={16} className="group-hover:-translate-x-0.5 transition-transform" />
               <span className="text-xs font-bold tracking-tight">Logout</span>
@@ -119,13 +124,6 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onMobileClose }: Si
           </div>
         ) : (
           <div className="flex flex-col gap-2 mt-2">
-             <button
-              onClick={() => { navigate('/settings'); }}
-              className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-primary/10 text-on-surface-variant hover:text-primary transition-all"
-              title="Settings"
-            >
-              <Settings size={18} />
-            </button>
             <button
               onClick={() => { signOut(); navigate('/auth'); }}
               className="w-10 h-10 flex items-center justify-center rounded-xl bg-error/5 hover:bg-error/10 text-error transition-all"
@@ -191,15 +189,7 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onMobileClose }: Si
           <path d="M0,192L48,197.3C96,203,192,213,288,197.3C384,181,480,139,576,144C672,149,768,203,864,224C960,245,1056,235,1152,197.3C1248,160,1344,96,1392,64L1440,32L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
         </svg>
 
-        {/* Drawer Close Button */}
-        <div className="absolute top-6 right-6 z-10">
-          <button 
-            onClick={onMobileClose} 
-            className="w-10 h-10 rounded-2xl bg-surface/80 backdrop-blur-sm text-on-surface-variant flex items-center justify-center shadow-sm border border-outline-variant/20 hover:bg-surface-container active:scale-95 transition-all"
-          >
-            <X size={20} />
-          </button>
-        </div>
+
 
         <div className="relative z-10 flex-1 flex flex-col pt-12 px-6 overflow-y-auto no-scrollbar pb-6">
           {/* Logo area */}
@@ -255,33 +245,50 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onMobileClose }: Si
             </ul>
           </div>
 
-          {/* User Account Button */}
-          <div className="mt-auto mb-6 relative">
-             <button onClick={() => { navigate('/account'); onMobileClose?.(); }} className="w-full flex items-center gap-3 p-3 rounded-2xl bg-surface-container hover:bg-surface-container-high transition-colors text-left border border-outline-variant/10 shadow-sm relative z-10 bg-white/50 backdrop-blur-md">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary overflow-hidden shrink-0 flex items-center justify-center shadow-sm">
-                  {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover" /> : <User size={20} className="text-white" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-black text-on-surface truncate">{user?.name || 'Guest User'}</h4>
-                  <p className="text-[10px] text-on-surface-variant uppercase tracking-widest">{user?.authProvider || 'Local'} Account</p>
-                </div>
-                <div className="w-6 h-6 rounded-full bg-surface flex items-center justify-center shrink-0 shadow-sm border border-outline-variant/10">
-                   <ChevronRight size={14} className="text-on-surface-variant rotate-90" />
-                </div>
-             </button>
-          </div>
-          
+
           {/* Bottom Actions */}
-          <div className="flex items-center gap-3 relative z-10">
-            <button onClick={() => { navigate('/settings'); onMobileClose?.(); }} className="flex-1 flex items-center justify-center gap-2 py-3 bg-surface/90 backdrop-blur-md rounded-2xl text-primary font-bold text-sm shadow-lg shadow-primary/20 border border-primary/20 hover:bg-surface active:scale-95 transition-all">
-               <Settings size={16} /> Settings
-            </button>
-            <button onClick={() => { signOut(); onMobileClose?.(); navigate('/auth'); }} className="flex-1 flex items-center justify-center gap-2 py-3 bg-error/10 backdrop-blur-md rounded-2xl text-error font-bold text-sm shadow-lg shadow-error/10 hover:bg-error/20 border border-error/10 active:scale-95 transition-all">
-               <LogOut size={16} /> Logout
-            </button>
+          <div className="mt-auto mb-6 flex justify-center w-full relative z-10 perspective-[1000px]">
+            <motion.button 
+              onClick={handleLogout}
+              animate={isLoggingOut ? { scale: 0.9, opacity: 0 } : {}}
+              transition={{ duration: 0.3 }}
+              className="w-1/2 flex items-center justify-center gap-2 py-3 bg-error/10 backdrop-blur-md rounded-2xl text-error font-bold text-sm shadow-lg shadow-error/10 hover:bg-error/20 border border-error/10 active:scale-95 transition-all"
+            >
+               <Power size={16} /> Logout
+            </motion.button>
           </div>
         </div>
       </div>
+
+      {/* Full Screen Logout Animation */}
+      <AnimatePresence>
+        {isLoggingOut && (
+          <motion.div
+            initial={{ opacity: 0, rotateX: -90, z: -1000 }}
+            animate={{ opacity: 1, rotateX: 0, z: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8, type: "spring", bounce: 0.4 }}
+            className="fixed inset-0 z-[9999] bg-black flex items-center justify-center flex-col"
+            style={{ perspective: 1000 }}
+          >
+            <motion.div
+              animate={{ rotateY: 360, scale: [1, 1.2, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+              className="text-error mb-4"
+            >
+              <Power size={80} />
+            </motion.div>
+            <motion.h2 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="text-white text-3xl font-black tracking-widest uppercase"
+            >
+              Logging out...
+            </motion.h2>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

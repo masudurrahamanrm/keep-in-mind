@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
 const logActivity = require('../utils/logger');
+const bcrypt = require('bcryptjs');
 
 // @desc    Callback for Google OAuth
 // @route   GET /api/auth/google/callback
@@ -69,6 +70,84 @@ const logout = async (req, res) => {
   res.json({ message: 'Logged out successfully' });
 };
 
+// @desc    Register a new user (local)
+// @route   POST /api/auth/register
+// @access  Public
+const registerLocal = async (req, res) => {
+  const { name, email, password } = req.body;
+  try {
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      authProvider: 'local',
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=FFC107&color=fff`
+    });
+
+    if (user) {
+      const token = generateToken(user._id);
+      res.status(201).json({
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          avatar: user.avatar,
+          authProvider: user.authProvider
+        },
+        token
+      });
+    } else {
+      res.status(400).json({ message: 'Invalid user data' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Authenticate user (local)
+// @route   POST /api/auth/login
+// @access  Public
+const loginLocal = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await User.findOne({ email });
+
+    if (user && user.password && (await bcrypt.compare(password, user.password))) {
+      const token = generateToken(user._id);
+      
+      await logActivity({
+        title: "User Login",
+        actor: user.email,
+        type: "success",
+        details: "Session started via Local Auth"
+      });
+
+      res.json({
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          avatar: user.avatar,
+          authProvider: user.authProvider
+        },
+        token
+      });
+    } else {
+      res.status(401).json({ message: 'Invalid email or password' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Update user "last seen" timestamp
 // @route   POST /api/auth/ping
 // @access  Private
@@ -90,4 +169,4 @@ const ping = async (req, res) => {
   }
 };
 
-module.exports = { googleCallback, getMe, logout, ping };
+module.exports = { googleCallback, getMe, logout, ping, registerLocal, loginLocal };

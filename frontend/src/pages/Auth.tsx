@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { useLocation, Link } from 'react-router-dom';
-import { ShieldCheck } from 'lucide-react';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
+import { ShieldCheck, Mail, Lock, User as UserIcon } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 import { Capacitor } from '@capacitor/core';
 // Import capacitor plugin if you still plan to use it for native Google OAuth later, 
 // but since the plan relies on backend redirect, we just use a simple redirect for now.
@@ -9,9 +11,19 @@ const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 export default function Auth() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { login } = useAuth();
   
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallBanner, setShowInstallBanner] = useState(false);
+  
+  // Local Auth State
+  const [isLogin, setIsLogin] = useState(true);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   React.useEffect(() => {
     const handleBeforeInstallPrompt = (e: any) => {
@@ -50,10 +62,24 @@ export default function Auth() {
   };
 
   const handleGoogleSign = () => {
-    // Redirect browser to backend Google OAuth initiation route
-    // Assumes backend is running locally at 5000 if not proxying, 
-    // but typically we can rely on proxy (like /api/auth/google)
     window.location.href = `${API_BASE}/auth/google`;
+  };
+
+  const handleLocalAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      const endpoint = isLogin ? '/auth/login' : '/auth/register';
+      const payload = isLogin ? { email, password } : { name, email, password };
+      const res = await axios.post(`${API_BASE}${endpoint}`, payload);
+      login(res.data.user, res.data.token);
+      navigate('/');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Authentication failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -112,6 +138,70 @@ export default function Auth() {
             </div>
 
             <div className="flex flex-col gap-3">
+              {error && (
+                <div className="bg-error/10 text-error text-xs p-2 rounded-lg text-center border border-error/20">
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleLocalAuth} className="flex flex-col gap-3">
+                {!isLogin && (
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                      <UserIcon size={16} />
+                    </div>
+                    <input 
+                      type="text" 
+                      placeholder="Full Name" 
+                      required 
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="block w-full pl-9 pr-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-[13px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FFC107] focus:border-transparent transition-all"
+                    />
+                  </div>
+                )}
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <Mail size={16} />
+                  </div>
+                  <input 
+                    type="email" 
+                    placeholder="Email Address" 
+                    required 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="block w-full pl-9 pr-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-[13px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FFC107] focus:border-transparent transition-all"
+                  />
+                </div>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <Lock size={16} />
+                  </div>
+                  <input 
+                    type="password" 
+                    placeholder="Password" 
+                    required 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="block w-full pl-9 pr-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-[13px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FFC107] focus:border-transparent transition-all"
+                  />
+                </div>
+                
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  className="mt-1 w-full flex items-center justify-center py-2.5 rounded-xl bg-[#FFC107] text-[#1A1F2C] text-[13px] font-bold shadow-md shadow-[#FFC107]/20 hover:bg-[#F5B000] hover:shadow-lg hover:-translate-y-0.5 active:scale-95 transition-all disabled:opacity-70"
+                >
+                  {loading ? 'Please wait...' : (isLogin ? 'Log In' : 'Sign Up')}
+                </button>
+              </form>
+
+              <div className="relative flex items-center py-1">
+                <div className="flex-grow border-t border-gray-200"></div>
+                <span className="flex-shrink-0 mx-4 text-gray-400 text-[10px] uppercase tracking-wider font-bold">OR</span>
+                <div className="flex-grow border-t border-gray-200"></div>
+              </div>
+
               <button 
                 type="button" 
                 onClick={handleGoogleSign}
@@ -125,6 +215,16 @@ export default function Auth() {
                 </svg>
                 Continue with Google
               </button>
+              
+              <div className="text-center mt-2">
+                <button 
+                  type="button" 
+                  onClick={() => setIsLogin(!isLogin)}
+                  className="text-[12px] text-gray-500 hover:text-gray-900 transition-colors"
+                >
+                  {isLogin ? "Don't have an account? Sign up" : "Already have an account? Log in"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
