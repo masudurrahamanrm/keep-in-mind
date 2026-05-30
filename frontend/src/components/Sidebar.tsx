@@ -151,8 +151,8 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onMobileClose }: Si
           "mb-10 flex items-center gap-3 transition-all duration-300",
           isCollapsed ? "justify-center" : "ml-2"
         )}>
-          <div className="w-10 h-10 bg-primary text-on-primary rounded-xl flex items-center justify-center shrink-0 shadow-xl shadow-primary/30">
-            <FileText size={20} />
+          <div className="w-10 h-10 flex items-center justify-center shrink-0">
+            <img src="/logo.jpg" alt="KeepInMind Logo" className="w-full h-full object-contain mix-blend-multiply scale-95 drop-shadow-sm rounded-2xl" />
           </div>
           {!isCollapsed && (
             <span className="truncate text-lg font-black tracking-tighter">
@@ -178,40 +178,109 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onMobileClose }: Si
 
       {/* --- Mobile Drawer (< md) --- */}
       <div className={cn(
-        "fixed inset-y-0 left-0 z-[60] w-72 flex flex-col glass border-r border-outline-variant/20 py-5 px-4 overflow-y-hidden transition-transform duration-300 ease-in-out md:hidden shadow-2xl",
+        "fixed inset-y-0 left-0 z-[60] w-[320px] max-w-[85vw] flex flex-col bg-surface overflow-hidden transition-transform duration-300 ease-in-out md:hidden shadow-2xl",
         isMobileOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        {/* Drawer Header */}
-        <div className="flex items-center justify-between mb-10 ml-1">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary text-on-primary rounded-xl flex items-center justify-center shadow-xl shadow-primary/30">
-              <FileText size={20} />
-            </div>
-            <span className="text-lg font-black tracking-tighter">
-              Keep <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">In Mind</span>
-            </span>
-          </div>
-          <button
-            onClick={onMobileClose}
-            className="w-10 h-10 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant transition-colors flex items-center justify-center"
+        {/* Top Wave */}
+        <svg className="absolute top-0 left-0 w-full text-primary/10 pointer-events-none" viewBox="0 0 1440 320" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,64L48,85.3C96,107,192,149,288,144C384,139,480,85,576,64C672,43,768,53,864,80C960,107,1056,149,1152,144C1248,139,1344,85,1392,58.7L1440,32L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path>
+        </svg>
+        
+        {/* Bottom Wave */}
+        <svg className="absolute bottom-0 left-0 w-full text-primary pointer-events-none" viewBox="0 0 1440 320" fill="currentColor" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style={{ height: '120px' }}>
+          <path d="M0,192L48,197.3C96,203,192,213,288,197.3C384,181,480,139,576,144C672,149,768,203,864,224C960,245,1056,235,1152,197.3C1248,160,1344,96,1392,64L1440,32L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+        </svg>
+
+        {/* Drawer Close Button */}
+        <div className="absolute top-6 right-6 z-10">
+          <button 
+            onClick={onMobileClose} 
+            className="w-10 h-10 rounded-2xl bg-surface/80 backdrop-blur-sm text-on-surface-variant flex items-center justify-center shadow-sm border border-outline-variant/20 hover:bg-surface-container active:scale-95 transition-all"
           >
             <X size={20} />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto no-scrollbar space-y-8">
-          <div>
-            <h3 className="px-4 text-[10px] font-black text-on-surface uppercase tracking-[0.2em] mb-3 opacity-80">Main Menu</h3>
-            {renderLinks(links)}
+        <div className="relative z-10 flex-1 flex flex-col pt-12 px-6 overflow-y-auto no-scrollbar pb-6">
+          {/* Logo area */}
+          <div className="flex items-center gap-4 mb-10">
+            <div className="w-14 h-14 flex items-center justify-center shrink-0">
+              <img src="/logo.jpg" alt="KeepInMind Logo" className="w-full h-full object-contain mix-blend-multiply scale-95 drop-shadow-md hover:scale-100 transition-transform rounded-2xl" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl font-black tracking-tighter text-on-surface">
+                Keep<span className="text-primary">InMind</span>
+              </span>
+              <span className="text-[9px] sm:text-[10px] text-on-surface-variant font-medium">Capture. Organize. Remember.</span>
+            </div>
           </div>
 
-          <div>
-            <h3 className="px-4 text-[10px] font-black text-on-surface uppercase tracking-[0.2em] mb-3 opacity-80">Spaces</h3>
-            {renderLinks(spaces)}
+          {/* MAIN */}
+          <div className="mb-6">
+            <h3 className="text-[10px] font-black text-primary uppercase tracking-[0.1em] mb-2 px-2">Main</h3>
+            <ul className="space-y-1">
+              {links.map((item) => {
+                const active = location.pathname.startsWith(item.path) || (item.path === '/notes' && location.pathname.startsWith('/drawing'));
+                const Icon = item.icon;
+                return (
+                  <li key={item.path}>
+                    <Link to={item.path} onClick={onMobileClose} className={cn("flex items-center gap-4 px-4 py-3 rounded-2xl font-bold transition-all", active ? "bg-primary/10 text-primary shadow-sm" : "text-on-surface hover:bg-surface-container")}>
+                      <Icon size={18} className={cn(active ? "text-primary" : "text-on-surface-variant")} />
+                      <span className="flex-1 text-sm tracking-tight">{item.label}</span>
+                      <ChevronRight size={16} className={cn(active ? "text-primary" : "text-on-surface-variant")} />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          {/* SPACES */}
+          <div className="mb-6">
+            <h3 className="text-[10px] font-black text-primary uppercase tracking-[0.1em] mb-2 px-2">Spaces</h3>
+            <ul className="space-y-1">
+              {spaces.map((item) => {
+                const active = location.pathname.startsWith(item.path);
+                const Icon = item.icon;
+                return (
+                  <li key={item.path}>
+                    <Link to={item.path} onClick={onMobileClose} className={cn("flex items-center gap-4 px-4 py-3 rounded-2xl font-bold transition-all", active ? "bg-primary/10 text-primary shadow-sm" : "text-on-surface hover:bg-surface-container")}>
+                      <Icon size={18} className={cn(active ? "text-primary" : "text-on-surface-variant")} />
+                      <span className="flex-1 text-sm tracking-tight">{item.label}</span>
+                      <ChevronRight size={16} className={cn(active ? "text-primary" : "text-on-surface-variant")} />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          {/* User Account Button */}
+          <div className="mt-auto mb-6 relative">
+             <button onClick={() => { navigate('/account'); onMobileClose?.(); }} className="w-full flex items-center gap-3 p-3 rounded-2xl bg-surface-container hover:bg-surface-container-high transition-colors text-left border border-outline-variant/10 shadow-sm relative z-10 bg-white/50 backdrop-blur-md">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary overflow-hidden shrink-0 flex items-center justify-center shadow-sm">
+                  {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover" /> : <User size={20} className="text-white" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-black text-on-surface truncate">{user?.name || 'Guest User'}</h4>
+                  <p className="text-[10px] text-on-surface-variant uppercase tracking-widest">{user?.authProvider || 'Local'} Account</p>
+                </div>
+                <div className="w-6 h-6 rounded-full bg-surface flex items-center justify-center shrink-0 shadow-sm border border-outline-variant/10">
+                   <ChevronRight size={14} className="text-on-surface-variant rotate-90" />
+                </div>
+             </button>
+          </div>
+          
+          {/* Bottom Actions */}
+          <div className="flex items-center gap-3 relative z-10">
+            <button onClick={() => { navigate('/settings'); onMobileClose?.(); }} className="flex-1 flex items-center justify-center gap-2 py-3 bg-surface/90 backdrop-blur-md rounded-2xl text-primary font-bold text-sm shadow-lg shadow-primary/20 border border-primary/20 hover:bg-surface active:scale-95 transition-all">
+               <Settings size={16} /> Settings
+            </button>
+            <button onClick={() => { signOut(); onMobileClose?.(); navigate('/auth'); }} className="flex-1 flex items-center justify-center gap-2 py-3 bg-error/10 backdrop-blur-md rounded-2xl text-error font-bold text-sm shadow-lg shadow-error/10 hover:bg-error/20 border border-error/10 active:scale-95 transition-all">
+               <LogOut size={16} /> Logout
+            </button>
           </div>
         </div>
-
-        <UserSection mobile />
       </div>
     </>
   );
