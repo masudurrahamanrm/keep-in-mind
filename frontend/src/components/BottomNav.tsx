@@ -7,6 +7,11 @@ export default function BottomNav() {
   const location = useLocation();
   const { user } = useAuth();
 
+  // Hide BottomNav on settings pages
+  if (location.pathname.startsWith('/settings')) {
+    return null;
+  }
+
   const links: { path: string; label: string; icon: any; isAvatar?: boolean; badge?: number }[] = [
     { path: '/notes', label: 'Notes', icon: FileText },
     { path: '/tasks', label: 'Tasks', icon: CheckCircle2 },

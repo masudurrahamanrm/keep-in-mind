@@ -40,6 +40,8 @@ const Explore = lazy(() => import('./pages/Explore'));
 const ExplorePost = lazy(() => import('./pages/ExplorePost'));
 const Recent = lazy(() => import('./pages/Recent'));
 const Settings = lazy(() => import('./pages/Settings'));
+const ThemeSettings = lazy(() => import('./pages/ThemeSettings'));
+const ThemeColorSettings = lazy(() => import('./pages/ThemeColorSettings'));
 const Drawing = lazy(() => import('./pages/Drawing'));
 const Editor  = lazy(() => import('./pages/Editor'));
 const Tasks   = lazy(() => import('./pages/Tasks'));
@@ -129,6 +131,8 @@ export default function App() {
           <Route path="explore/:id" element={<Suspense fallback={<PageLoader />}><ExplorePost /></Suspense>} />
           <Route path="recent"   element={<Suspense fallback={<PageLoader />}><Recent /></Suspense>}  />
           <Route path="settings" element={<Suspense fallback={<PageLoader />}><Settings /></Suspense>}/>
+          <Route path="settings/theme" element={<Suspense fallback={<PageLoader />}><ThemeSettings /></Suspense>}/>
+          <Route path="settings/theme-color" element={<Suspense fallback={<PageLoader />}><ThemeColorSettings /></Suspense>}/>
           <Route path="cloud-sync" element={<Suspense fallback={<PageLoader />}><CloudSync /></Suspense>}/>
         </Route>
 

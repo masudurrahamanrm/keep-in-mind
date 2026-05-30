@@ -150,20 +150,6 @@ export default function Settings() {
     triggerHaptic();
   };
 
-  const cycleTheme = () => {
-    const themes = ['light', 'dark', 'system'];
-    const nextTheme = themes[(themes.indexOf(theme) + 1) % themes.length];
-    setTheme(nextTheme);
-    setDarkMode(nextTheme === 'dark');
-    triggerHaptic();
-  };
-
-  const cycleThemeColor = () => {
-    const colors = ['yellow', 'blue', 'green', 'purple'];
-    setThemeColor(colors[(colors.indexOf(themeColor) + 1) % colors.length]);
-    triggerHaptic();
-  };
-
   const cycleFontStyle = () => {
     const fonts = ['inter', 'outfit', 'roboto', 'opensans'];
     setFontStyle(fonts[(fonts.indexOf(fontStyle) + 1) % fonts.length]);
@@ -218,11 +204,11 @@ export default function Settings() {
 
           {/* Group 1: chevron rows */}
           <Card>
-            <div onClick={cycleTheme}>
+            <div onClick={() => navigate('/settings/theme')} className="cursor-pointer">
               <LinkRow icon={Sun} label="Appearance" value={theme.charAt(0).toUpperCase() + theme.slice(1)} />
             </div>
             <Divider />
-            <div onClick={cycleThemeColor} className="flex items-center justify-between py-4 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
+            <div onClick={() => navigate('/settings/theme-color')} className="flex items-center justify-between py-4 cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.03] transition-colors">
               <div className="flex items-center gap-4">
                 <div className="text-[#F3A83B]"><Clock size={22} strokeWidth={2} /></div>
                 <span className="font-medium text-neutral-900 dark:text-neutral-100 text-[15px]">Theme Color</span>
