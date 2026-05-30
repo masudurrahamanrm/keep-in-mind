@@ -69,6 +69,29 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     root.setAttribute('data-text-size', textSize);
   }, [themeColor, fontStyle, textSize]);
 
+  // Global Haptic Feedback Listener
+  useEffect(() => {
+    if (!hapticFeedback || typeof navigator === 'undefined' || !navigator.vibrate) return;
+
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      
+      // Look up the DOM tree to see if the click originated from an interactive element
+      const isInteractive = target.closest('button, a, [role="button"], [role="switch"], .cursor-pointer');
+      
+      if (isInteractive) {
+        // Trigger a very subtle vibration for general UI interactions
+        navigator.vibrate(15);
+      }
+    };
+
+    document.addEventListener('click', handleGlobalClick, { passive: true });
+    
+    return () => {
+      document.removeEventListener('click', handleGlobalClick);
+    };
+  }, [hapticFeedback]);
+
   return (
     <PreferencesContext.Provider
       value={{

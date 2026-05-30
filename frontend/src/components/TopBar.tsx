@@ -110,6 +110,11 @@ export default function TopBar({ searchQuery, setSearchQuery, onToggleSidebar, o
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
+  // Hide TopBar entirely on settings pages
+  if (currentPath.startsWith('/settings')) {
+    return null;
+  }
+
   // Mobile Search Overlay
   if (isMobileSearchOpen) {
     return (

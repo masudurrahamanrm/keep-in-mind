@@ -4,7 +4,7 @@ import {
   ChevronLeft, ChevronRight,
   Sun, Clock, Moon, Sparkles, Volume2,
   Cloud, ArchiveRestore, Download,
-  Bell, Lock, Type, ALargeSmall
+  Bell, Lock, Type, ALargeSmall, Search
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -193,10 +193,30 @@ export default function Settings() {
   };
 
   return (
-    <div className="min-h-full bg-[#FCF7ED] dark:bg-neutral-900 pb-28">
+    <div className="min-h-full bg-[#FCF7ED] dark:bg-neutral-900 pb-28 flex flex-col">
 
+      {/* Header */}
+      <div className="flex items-center justify-between p-5 sticky top-0 z-10 glass border-b border-outline-variant/20">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white dark:bg-neutral-800 shadow-sm border border-outline-variant/20 text-on-surface hover:bg-surface-container active:scale-95 transition-all"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <h1 className="text-xl font-black text-on-surface tracking-tight">Settings</h1>
+        </div>
+        
+        {/* Placeholder Search Button - allows for future implementation */}
+        <button
+          onClick={() => { /* Future feature: search settings */ }}
+          className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white dark:bg-neutral-800 shadow-sm border border-outline-variant/20 text-on-surface hover:bg-surface-container active:scale-95 transition-all"
+        >
+          <Search size={20} />
+        </button>
+      </div>
 
-      <div className="flex-1 overflow-y-auto px-5 pt-2 pb-12 space-y-8">
+      <div className="flex-1 overflow-y-auto px-5 pt-6 pb-12 space-y-8">
 
         {/* ── Preferences ──────────────────────────────────────────── */}
         <section>
