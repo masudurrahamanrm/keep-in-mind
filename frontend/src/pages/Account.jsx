@@ -45,7 +45,7 @@ export default function Account() {
   ];
 
   const menuGroup2 = [
-    { icon: HelpCircle, label: 'Help & Support',     color: '#FF9E4A', path: null },
+    { icon: HelpCircle, label: 'Help & Support',     color: '#FF9E4A', path: '/help' },
     { icon: Info,       label: 'About KeepInMind',   color: '#FDCB58', path: '/about' },
   ];
 

@@ -52,6 +52,7 @@ const CloudSync = lazy(() => import('./pages/CloudSync'));
 const About = lazy(() => import('./pages/About'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./pages/TermsOfService'));
+const HelpSupport = lazy(() => import('./pages/HelpSupport'));
 
 // ── Guard: redirect to /notes if already signed in ─────────
 function PublicRoute({ children }: { children: ReactNode }) {
@@ -140,6 +141,7 @@ export default function App() {
           <Route path="about" element={<Suspense fallback={<PageLoader />}><About /></Suspense>}/>
           <Route path="privacy-policy" element={<Suspense fallback={<PageLoader />}><PrivacyPolicy /></Suspense>}/>
           <Route path="terms-of-service" element={<Suspense fallback={<PageLoader />}><TermsOfService /></Suspense>}/>
+          <Route path="help" element={<Suspense fallback={<PageLoader />}><HelpSupport /></Suspense>}/>
         </Route>
 
         {/* Private: Full-screen / Immersive views WITHOUT global layout */}
