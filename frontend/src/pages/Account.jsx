@@ -46,7 +46,7 @@ export default function Account() {
 
   const menuGroup2 = [
     { icon: HelpCircle, label: 'Help & Support',     color: '#FF9E4A', path: null },
-    { icon: Info,       label: 'About KeepInMind',   color: '#FDCB58', path: null },
+    { icon: Info,       label: 'About KeepInMind',   color: '#FDCB58', path: '/about' },
   ];
 
   return (
@@ -151,7 +151,7 @@ export default function Account() {
           {menuGroup2.map((item, idx) => (
             <React.Fragment key={item.label}>
               <button
-                onClick={() => {}}
+                onClick={() => item.path ? navigate(item.path) : null}
                 className="w-full flex items-center justify-between p-4 hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors"
               >
                 <div className="flex items-center gap-4">

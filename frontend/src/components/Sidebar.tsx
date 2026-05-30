@@ -245,18 +245,6 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onMobileClose }: Si
             </ul>
           </div>
 
-
-          {/* Bottom Actions */}
-          <div className="mt-auto mb-[20vh] flex justify-center w-full relative z-10 perspective-[1000px]">
-            <motion.button 
-              onClick={handleLogout}
-              animate={isLoggingOut ? { scale: 0.9, opacity: 0 } : {}}
-              transition={{ duration: 0.3 }}
-              className="w-1/2 flex items-center justify-center gap-2 py-3 bg-error/10 backdrop-blur-md rounded-2xl text-error font-bold text-sm shadow-lg shadow-error/10 hover:bg-error/20 border border-error/10 active:scale-95 transition-all"
-            >
-               <Power size={16} /> Logout
-            </motion.button>
-          </div>
         </div>
       </div>
 
