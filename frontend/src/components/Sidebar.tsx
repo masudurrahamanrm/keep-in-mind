@@ -247,7 +247,7 @@ export default function Sidebar({ isCollapsed, isMobileOpen, onMobileClose }: Si
 
 
           {/* Bottom Actions */}
-          <div className="mt-auto mb-6 flex justify-center w-full relative z-10 perspective-[1000px]">
+          <div className="mt-auto mb-[20vh] flex justify-center w-full relative z-10 perspective-[1000px]">
             <motion.button 
               onClick={handleLogout}
               animate={isLoggingOut ? { scale: 0.9, opacity: 0 } : {}}
