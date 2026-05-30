@@ -123,7 +123,7 @@ export default function MediaUploadFAB({ onFilesSelect, isLoading }: MediaUpload
             onClick={toggleMenu}
             disabled={isLoading}
             className={`
-              w-16 h-16 rounded-full flex items-center justify-center 
+              w-14 h-14 rounded-full flex items-center justify-center 
               bg-gradient-to-tr from-amber-500 to-amber-400 text-white shadow-[0_8px_30px_rgb(245,158,11_/_40%)] hover:shadow-[0_12px_40px_rgb(245,158,11_/_50%)] transition-all duration-300 relative z-10
               ${isLoading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}
             `}
@@ -140,7 +140,7 @@ export default function MediaUploadFAB({ onFilesSelect, isLoading }: MediaUpload
                   animate={{ rotate: 0, opacity: 1 }} 
                   exit={{ rotate: 90, opacity: 0 }}
                 >
-                  <X size={28} />
+                  <X size={26} strokeWidth={3} />
                 </motion.div>
               ) : (
                 <motion.div 
@@ -149,7 +149,7 @@ export default function MediaUploadFAB({ onFilesSelect, isLoading }: MediaUpload
                   animate={{ rotate: 0, opacity: 1 }} 
                   exit={{ rotate: -90, opacity: 0 }}
                 >
-                  <Plus size={28} strokeWidth={2.5} />
+                  <Plus size={26} strokeWidth={3} />
                 </motion.div>
               )}
             </AnimatePresence>

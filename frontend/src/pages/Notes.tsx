@@ -580,10 +580,10 @@ export default function Notes() {
       {/* Floating Action Button (FAB) matching the mockup */}
       <button
         onClick={() => navigate('/editor')}
-        className="fixed bottom-24 right-5 w-[60px] h-[60px] rounded-full bg-[#FFC107] hover:bg-[#F5B000] text-white flex items-center justify-center shadow-lg shadow-[#FFC107]/25 active:scale-95 transition-all z-40"
+        className="fixed bottom-24 right-5 md:bottom-8 md:right-8 w-14 h-14 rounded-full bg-[#FFC107] hover:bg-[#F5B000] text-white flex items-center justify-center shadow-lg shadow-[#FFC107]/25 active:scale-95 transition-all z-40"
         title="Add Note"
       >
-        <Plus size={30} strokeWidth={2.5} />
+        <Plus size={26} strokeWidth={3} />
       </button>
 
       {/* Note Context Menu */}
