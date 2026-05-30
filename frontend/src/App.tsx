@@ -14,6 +14,7 @@ import Heartbeat from './components/Heartbeat';
 import BackgroundSync from './components/BackgroundSync';
 import { Skeleton } from './components/Skeleton';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { Agentation } from 'agentation';
 
 // Initialize Capacitor Google Auth
 try {
@@ -90,6 +91,7 @@ export default function App() {
     <BrowserRouter>
       <Heartbeat />
       <BackgroundSync />
+      {import.meta.env.DEV && <Agentation />}
       <ToastContainer theme="dark" position="bottom-center" />
       <Routes>
 

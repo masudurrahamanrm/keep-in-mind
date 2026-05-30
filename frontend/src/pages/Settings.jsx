@@ -170,18 +170,6 @@ export default function Settings() {
   return (
     <div className="min-h-full bg-[#FCF7ED] dark:bg-neutral-900 pb-28">
 
-      {/* Header */}
-      <div className="flex items-center px-4 pt-6 pb-3 relative">
-        <button
-          onClick={() => navigate(-1)}
-          className="p-2 -ml-2 text-neutral-800 dark:text-neutral-100 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-        >
-          <ChevronLeft size={24} />
-        </button>
-        <h1 className="absolute left-1/2 -translate-x-1/2 text-xl font-semibold text-neutral-900 dark:text-white">
-          Settings
-        </h1>
-      </div>
 
       <div className="flex-1 overflow-y-auto px-5 pt-2 pb-12 space-y-8">
 
